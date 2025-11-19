@@ -1,0 +1,3 @@
+module qml
+singleton Style 1.0 Style.qml
+singleton ApiClient 1.0 ApiClient.qml

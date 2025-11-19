@@ -1,0 +1,5 @@
+module pages
+DashboardPage 1.0 DashboardPage.qml
+MovePage 1.0 MovePage.qml
+FilesPage 1.0 FilesPage.qml
+SettingsPage 1.0 SettingsPage.qml

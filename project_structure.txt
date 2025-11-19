@@ -1,0 +1,24 @@
+.
+├── PROJECT_SUMMARY.md
+├── README.md
+├── backend
+│   ├── __init__.py
+│   ├── application.py
+│   ├── config_manager.py
+│   └── moonraker_client.py
+├── config.json
+├── demo.py
+├── main.py
+├── project_structure.txt
+├── pyproject.toml
+├── qml
+│   ├── MainWindow.qml
+│   ├── components
+│   └── pages
+├── qtks.log
+├── requirements.txt
+├── run.sh
+├── test_connection.py
+└── uv.lock
+
+4 directories, 17 files

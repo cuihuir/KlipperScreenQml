@@ -1,0 +1,13 @@
+module components
+ConnectionIndicator 1.0 ConnectionIndicator.qml
+TemperaturePanel 1.0 TemperaturePanel.qml
+TempControl 1.0 TempControl.qml
+PrintControl 1.0 PrintControl.qml
+MoveControl 1.0 MoveControl.qml
+StatusBar 1.0 StatusBar.qml
+MetroButton 1.0 MetroButton.qml
+MetroDialog 1.0 MetroDialog.qml
+NumericKeypad 1.0 NumericKeypad.qml
+ErrorOverlay 1.0 ErrorOverlay.qml
+NotificationToast 1.0 NotificationToast.qml
+NotificationItem 1.0 NotificationItem.qml

@@ -1,0 +1,43 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+*.pyo
+*.pyd
+build/
+dist/
+wheels/
+*.egg-info
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+qtks.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# uv
+uv.lock
+.python-version
+
+# Project specific
+config.local.json
+
+other/*
+ui_design/*
