@@ -15,6 +15,8 @@ QtKs 是一个现代化的 3D 打印机控制界面，采用 **Metro 设计语�
 - **扁平设计** - 无/极小圆角，清晰易读
 - **等宽数字** - 专业显示温度和坐标
 - **完全自适应** - 支持任意屏幕尺寸
+  <img width="1019" height="598" alt="image" src="https://github.com/user-attachments/assets/4b99f742-3157-4458-81ea-9a32f213d3ec" />
+
 
 ### 🖥️ 核心功能
 - **主页（Dashboard）**
