@@ -626,11 +626,13 @@ class MoonrakerClient(QObject):
                 "objects": {
                     "extruder": ["temperature", "target", "power"],
                     "heater_bed": ["temperature", "target", "power"],
-                    "print_stats": ["state", "filename", "print_duration", "filament_used"],
+                    "print_stats": ["state", "filename", "print_duration", "filament_used", "total_duration", "info"],
                     "virtual_sdcard": ["progress", "file_position"],
                     "webhooks": ["state", "state_message"],
                     "toolhead": ["position", "homed_axes"],
                     "gcode_move": ["gcode_position", "speed", "speed_factor"],
+                    "display_status": ["progress", "message"],
+                    "motion_report": ["live_velocity", "live_extruder_velocity"],
                 }
             },
             "id": self._get_next_id()
@@ -679,7 +681,8 @@ class MoonrakerClient(QObject):
             }
             self.temperatureUpdated.emit(temps)
 
-        # 打印状态
+        # 打印状态和统计信息
+        stats_updated = False
         if 'print_stats' in status:
             ps = status['print_stats']
             if 'state' in ps:
@@ -690,6 +693,27 @@ class MoonrakerClient(QObject):
                 self._print_filename = ps['filename']
                 self.logger.info(f"当前打印文件: {ps['filename']}")
 
+            # 打印时长和耗材
+            if 'print_duration' in ps:
+                self._print_duration = ps['print_duration']
+                stats_updated = True
+            if 'filament_used' in ps:
+                self._filament_used = ps['filament_used']
+                stats_updated = True
+            if 'total_duration' in ps:
+                self._total_duration = ps['total_duration']
+                stats_updated = True
+
+            # Fluidd 算法：优先使用 Klipper 提供的层数
+            if 'info' in ps and ps['info']:
+                info = ps['info']
+                if 'total_layer' in info and info['total_layer'] is not None:
+                    self._total_layers = info['total_layer']
+                    stats_updated = True
+                if 'current_layer' in info and info['current_layer'] is not None:
+                    self._current_layer = info['current_layer']
+                    stats_updated = True
+
         # 打印进度 - 性能优化：限制更新频率为 1 秒一次
         if 'virtual_sdcard' in status:
             vsd = status['virtual_sdcard']
@@ -697,6 +721,9 @@ class MoonrakerClient(QObject):
                 import time
                 current_time = time.time()
                 new_progress = round(vsd['progress'] * 100, 1)
+
+                # 存储原始进度用于 Fluidd 算法计算
+                self._file_progress = vsd['progress']
 
                 # 只在进度变化且距离上次更新超过 1 秒时才更新
                 if (new_progress != self._print_progress and
@@ -708,6 +735,7 @@ class MoonrakerClient(QObject):
                         'filename': self._print_filename
                     }
                     self.printProgressChanged.emit(progress_data)
+                    stats_updated = True  # 进度变化时更新统计
 
         # Webhooks 状态（仅在没有 print_stats 或状态为 error/shutdown 时使用）
         if 'webhooks' in status:
@@ -728,7 +756,17 @@ class MoonrakerClient(QObject):
                 self.logger.info(f"使用 webhooks 状态: {wh['state']}")
                 self.printerStateChanged.emit(wh['state'])
 
-        # 位置信息 (从 gcode_move 获取)
+        # 运动报告 (motion_report) - Fluidd 算法所需
+        if 'motion_report' in status:
+            mr = status['motion_report']
+            if 'live_velocity' in mr:
+                self._live_velocity = mr['live_velocity']
+                stats_updated = True
+            if 'live_extruder_velocity' in mr:
+                self._live_extruder_velocity = mr['live_extruder_velocity']
+                stats_updated = True
+
+        # 位置信息 (从 gcode_move 获取) + Fluidd 层数计算
         position_updated = False
         if 'gcode_move' in status:
             gm = status['gcode_move']
@@ -737,7 +775,27 @@ class MoonrakerClient(QObject):
                 if len(pos) >= 3:
                     self._position_x = round(pos[0], 2)
                     self._position_y = round(pos[1], 2)
-                    self._position_z = round(pos[2], 2)
+                    new_z = round(pos[2], 2)
+
+                    # Fluidd 算法：计算当前层（如果 Klipper 未提供）
+                    # 只在打印中且 Z 变化时计算
+                    if (self._printer_state == "printing" and
+                        new_z != self._position_z and
+                        self._print_duration > 0 and
+                        self._layer_height > 0 and
+                        self._first_layer_height > 0):
+
+                        import math
+                        # Fluidd 公式: ceil((z - first_layer_height) / layer_height + 1)
+                        calculated_layer = math.ceil(
+                            (new_z - self._first_layer_height) / self._layer_height + 1
+                        )
+
+                        if calculated_layer > 0:
+                            self._current_layer = calculated_layer
+                            stats_updated = True
+
+                    self._position_z = new_z
                     position_updated = True
 
         # 归零状态 (从 toolhead 获取)
@@ -756,6 +814,16 @@ class MoonrakerClient(QObject):
                 'homed_axes': self._homed_axes
             }
             self.positionUpdated.emit(position_data)
+
+        # 发送打印统计更新信号
+        if stats_updated:
+            stats_data = {
+                'duration': self._print_duration,
+                'filament': self._filament_used,
+                'current_layer': self._current_layer,
+                'total_layers': self._total_layers
+            }
+            self.printStatsUpdated.emit(stats_data)
 
     def _get_next_id(self):
         """获取下一个请求ID"""
