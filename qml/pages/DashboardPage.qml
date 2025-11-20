@@ -69,6 +69,7 @@ Page {
 
                 // 上方 - 欢迎页/缩略图
                 Rectangle {
+                id: topCard
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 color: Style.bgCard
@@ -81,7 +82,7 @@ Page {
                 Loader {
                     anchors.fill: parent
                     anchors.margins: Style.spacingMedium
-                    sourceComponent: hasError ? errorComponent : (isPrinting ? printingComponent : welcomeComponent)
+                    sourceComponent: topCard.hasError ? errorComponent : (isPrinting ? printingComponent : welcomeComponent)
                 }
 
                 // 错误状态 - 显示Klipper错误
@@ -265,92 +266,345 @@ Page {
                 Component {
                     id: welcomeComponent
 
-                    ColumnLayout {
+                    RowLayout {
                         anchors.fill: parent
                         spacing: Style.spacingLarge
 
-                        Item { Layout.fillHeight: true }
-
-                        // 打印机图标
-                        Label {
-                            Layout.alignment: Qt.AlignHCenter
-                            text: "🖨"
-                            font.pixelSize: Style.baseUnit * 6
-                        }
-
-                        Label {
-                            Layout.alignment: Qt.AlignHCenter
-                            text: "WELCOME TO QTKS"
-                            font.pixelSize: Style.fontXLarge
-                            font.family: Style.fontFamily
-                            font.bold: true
-                            font.letterSpacing: 4
-                            color: Style.accent
-                        }
-
-                        Label {
-                            Layout.alignment: Qt.AlignHCenter
-                            text: "3D Printer Interface"
-                            font.pixelSize: Style.fontMedium
-                            font.family: Style.fontFamily
-                            font.letterSpacing: 2
-                            color: Style.textSecondary
-                        }
-
-                        Item { Layout.fillHeight: true }
-                    }
-                }
-
-                // 打印状态 - 缩略图
-                Component {
-                    id: printingComponent
-
-                    ColumnLayout {
-                        anchors.fill: parent
-                        spacing: Style.spacingSmall
-
-                        Label {
-                            text: "PRINTING"
-                            font.pixelSize: Style.fontMedium
-                            font.family: Style.fontFamily
-                            font.bold: true
-                            font.letterSpacing: 2
-                            color: Style.textPrimary
-                        }
-
-                        Rectangle {
-                            Layout.fillWidth: true
-                            height: Style.borderThin
-                            color: Style.divider
-                        }
-
-                        // 缩略图占位
-                        Rectangle {
-                            Layout.fillWidth: true
+                        // 左侧 - 打印机图片容器
+                        Item {
                             Layout.fillHeight: true
-                            color: Style.bgSecondary
-                            border.width: Style.borderThin
-                            border.color: Style.divider
+                            Layout.preferredWidth: parent.width * 0.4
 
-                            Label {
-                                anchors.centerIn: parent
-                                text: "G-CODE\nTHUMBNAIL"
-                                font.pixelSize: Style.fontLarge
-                                font.family: Style.fontFamily
-                                font.letterSpacing: 2
-                                color: Style.textDisabled
-                                horizontalAlignment: Text.AlignHCenter
+                            Image {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                anchors.verticalCenter: parent.verticalCenter
+                                anchors.verticalCenterOffset: -parent.height * 0.1  // 向上偏移 10%
+                                width: parent.width
+                                height: parent.height * 0.8  // 缩小到 80% 高度
+                                source: Qt.resolvedUrl("../assets/printer.png")
+                                fillMode: Image.PreserveAspectFit
+                                smooth: true
+                                cache: false
+
+                                onStatusChanged: {
+                                    if (status === Image.Error) {
+                                        console.error("Failed to load printer image:", source)
+                                    }
+                                }
                             }
                         }
 
-                        // 文件名
-                        Label {
+                        // 右侧 - 文字信息
+                        ColumnLayout {
+                            Layout.fillHeight: true
                             Layout.fillWidth: true
-                            text: printer ? (printer.printFilename || "NONE") : "NONE"
-                            font.pixelSize: Style.fontNormal
-                            font.family: Style.fontFamilyMono
-                            color: Style.textPrimary
-                            elide: Text.ElideMiddle
+                            spacing: Style.spacingMedium
+
+                            Item { Layout.fillHeight: true }
+
+                            Label {
+                                Layout.fillWidth: true
+                                text: "WELCOME TO QTKS"
+                                font.pixelSize: Style.fontXXLarge
+                                font.family: Style.fontFamily
+                                font.bold: true
+                                font.letterSpacing: 4
+                                color: Style.accent
+                                wrapMode: Text.WordWrap
+                            }
+
+                            Label {
+                                Layout.fillWidth: true
+                                text: "Modern 3D Printer Interface"
+                                font.pixelSize: Style.fontLarge
+                                font.family: Style.fontFamily
+                                font.letterSpacing: 2
+                                color: Style.textSecondary
+                                wrapMode: Text.WordWrap
+                            }
+
+                            Rectangle {
+                                Layout.fillWidth: true
+                                height: Style.borderMedium
+                                color: Style.accent
+                            }
+
+                            Label {
+                                Layout.fillWidth: true
+                                text: "Metro Design • High Performance\nOptimized for Touch Screens"
+                                font.pixelSize: Style.fontNormal
+                                font.family: Style.fontFamily
+                                color: Style.textSecondary
+                                wrapMode: Text.WordWrap
+                            }
+
+                            Item { Layout.fillHeight: true }
+                        }
+                    }
+                }
+
+                // 打印状态 - 缩略图和统计信息
+                Component {
+                    id: printingComponent
+
+                    RowLayout {
+                        anchors.fill: parent
+                        spacing: Style.spacingLarge
+
+                        // 左侧 - G-code 缩略图
+                        Item {
+                            Layout.fillHeight: true
+                            Layout.preferredWidth: parent.width * 0.4
+
+                            Rectangle {
+                                anchors.fill: parent
+                                color: Style.bgSecondary
+                                border.width: Style.borderThin
+                                border.color: Style.divider
+
+                                // 缩略图（如果有的话）
+                                Image {
+                                    visible: printer && printer.printThumbnail !== ""
+                                    anchors.centerIn: parent
+                                    width: parent.width * 0.9
+                                    height: parent.height * 0.9
+                                    source: printer ? printer.printThumbnail : ""
+                                    fillMode: Image.PreserveAspectFit
+                                    smooth: true
+                                }
+
+                                // 占位文字（无缩略图时显示）
+                                Label {
+                                    visible: !printer || printer.printThumbnail === ""
+                                    anchors.centerIn: parent
+                                    text: "G-CODE\nTHUMBNAIL"
+                                    font.pixelSize: Style.fontLarge
+                                    font.family: Style.fontFamily
+                                    font.letterSpacing: 2
+                                    color: Style.textDisabled
+                                    horizontalAlignment: Text.AlignHCenter
+                                }
+                            }
+                        }
+
+                        // 右侧 - 打印统计信息
+                        ColumnLayout {
+                            Layout.fillHeight: true
+                            Layout.fillWidth: true
+                            spacing: Style.spacingMedium
+
+                            Label {
+                                text: "PRINTING"
+                                font.pixelSize: Style.fontLarge
+                                font.family: Style.fontFamily
+                                font.bold: true
+                                font.letterSpacing: 3
+                                color: Style.accent
+                            }
+
+                            Rectangle {
+                                Layout.fillWidth: true
+                                height: Style.borderMedium
+                                color: Style.accent
+                            }
+
+                            // 文件名
+                            Label {
+                                Layout.fillWidth: true
+                                text: printer ? (printer.printFilename || "NONE") : "NONE"
+                                font.pixelSize: Style.fontNormal
+                                font.family: Style.fontFamilyMono
+                                color: Style.textPrimary
+                                elide: Text.ElideMiddle
+                                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                                maximumLineCount: 2
+                            }
+
+                            Item { height: Style.spacingSmall }
+
+                            // 两列布局显示所有指标
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Style.spacingLarge
+
+                                // 左列
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: Style.spacingSmall
+
+                                    // 打印速度
+                                    RowLayout {
+                                        spacing: Style.spacingSmall
+                                        Label {
+                                            text: "打印速度:"
+                                            font.pixelSize: Style.fontSmall
+                                            color: Style.textSecondary
+                                        }
+                                        Label {
+                                            text: printer ? (printer.liveVelocity.toFixed(1) + " mm/s") : "0 mm/s"
+                                            font.pixelSize: Style.fontNormal
+                                            font.family: Style.fontFamilyMono
+                                            color: Style.textPrimary
+                                        }
+                                    }
+
+                                    // 流量
+                                    RowLayout {
+                                        spacing: Style.spacingSmall
+                                        Label {
+                                            text: "流量:"
+                                            font.pixelSize: Style.fontSmall
+                                            color: Style.textSecondary
+                                        }
+                                        Label {
+                                            text: printer ? (printer.liveFlow.toFixed(1) + " mm³/s") : "0 mm³/s"
+                                            font.pixelSize: Style.fontNormal
+                                            font.family: Style.fontFamilyMono
+                                            color: Style.textPrimary
+                                        }
+                                    }
+
+                                    // 耗材用量
+                                    RowLayout {
+                                        spacing: Style.spacingSmall
+                                        Label {
+                                            text: "耗材用量:"
+                                            font.pixelSize: Style.fontSmall
+                                            color: Style.textSecondary
+                                        }
+                                        Label {
+                                            text: printer ? ((printer.filamentUsed / 1000).toFixed(2) + " m") : "0 m"
+                                            font.pixelSize: Style.fontNormal
+                                            font.family: Style.fontFamilyMono
+                                            color: Style.textPrimary
+                                        }
+                                    }
+
+                                    // 打印层
+                                    RowLayout {
+                                        spacing: Style.spacingSmall
+                                        Label {
+                                            text: "打印层:"
+                                            font.pixelSize: Style.fontSmall
+                                            color: Style.textSecondary
+                                        }
+                                        Label {
+                                            text: printer ? (printer.currentLayer + " of " + printer.totalLayers) : "0 of 0"
+                                            font.pixelSize: Style.fontNormal
+                                            font.family: Style.fontFamilyMono
+                                            color: Style.info
+                                            font.bold: true
+                                        }
+                                    }
+                                }
+
+                                // 右列
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: Style.spacingSmall
+
+                                    // 估算剩余
+                                    RowLayout {
+                                        spacing: Style.spacingSmall
+                                        Label {
+                                            text: "估算剩余:"
+                                            font.pixelSize: Style.fontSmall
+                                            color: Style.textSecondary
+                                        }
+                                        Label {
+                                            text: {
+                                                if (!printer || printer.fileTimeLeft <= 0) return "--:--:--"
+                                                var seconds = Math.floor(printer.fileTimeLeft)
+                                                var h = Math.floor(seconds / 3600)
+                                                var m = Math.floor((seconds % 3600) / 60)
+                                                var s = seconds % 60
+                                                return (h < 10 ? "0" : "") + h + ":" +
+                                                       (m < 10 ? "0" : "") + m + ":" +
+                                                       (s < 10 ? "0" : "") + s
+                                            }
+                                            font.pixelSize: Style.fontNormal
+                                            font.family: Style.fontFamilyMono
+                                            color: Style.textPrimary
+                                        }
+                                    }
+
+                                    // 切片剩余
+                                    RowLayout {
+                                        spacing: Style.spacingSmall
+                                        Label {
+                                            text: "切片剩余:"
+                                            font.pixelSize: Style.fontSmall
+                                            color: Style.textSecondary
+                                        }
+                                        Label {
+                                            text: {
+                                                if (!printer || printer.slicerTimeLeft <= 0) return "--:--:--"
+                                                var seconds = Math.floor(printer.slicerTimeLeft)
+                                                var h = Math.floor(seconds / 3600)
+                                                var m = Math.floor((seconds % 3600) / 60)
+                                                var s = seconds % 60
+                                                return (h < 10 ? "0" : "") + h + ":" +
+                                                       (m < 10 ? "0" : "") + m + ":" +
+                                                       (s < 10 ? "0" : "") + s
+                                            }
+                                            font.pixelSize: Style.fontNormal
+                                            font.family: Style.fontFamilyMono
+                                            color: Style.textPrimary
+                                        }
+                                    }
+
+                                    // 合计
+                                    RowLayout {
+                                        spacing: Style.spacingSmall
+                                        Label {
+                                            text: "合计:"
+                                            font.pixelSize: Style.fontSmall
+                                            color: Style.textSecondary
+                                        }
+                                        Label {
+                                            text: {
+                                                if (!printer) return "00:00:00"
+                                                var seconds = Math.floor(printer.printDuration)
+                                                var h = Math.floor(seconds / 3600)
+                                                var m = Math.floor((seconds % 3600) / 60)
+                                                var s = seconds % 60
+                                                return (h < 10 ? "0" : "") + h + ":" +
+                                                       (m < 10 ? "0" : "") + m + ":" +
+                                                       (s < 10 ? "0" : "") + s
+                                            }
+                                            font.pixelSize: Style.fontNormal
+                                            font.family: Style.fontFamilyMono
+                                            color: Style.accent
+                                            font.bold: true
+                                        }
+                                    }
+
+                                    // 预估完成
+                                    RowLayout {
+                                        spacing: Style.spacingSmall
+                                        Label {
+                                            text: "预估完成:"
+                                            font.pixelSize: Style.fontSmall
+                                            color: Style.textSecondary
+                                        }
+                                        Label {
+                                            text: {
+                                                if (!printer || printer.etaTimestamp <= 0) return "--:--"
+                                                var date = new Date(printer.etaTimestamp)
+                                                var h = date.getHours()
+                                                var m = date.getMinutes()
+                                                return (h < 10 ? "0" : "") + h + ":" +
+                                                       (m < 10 ? "0" : "") + m
+                                            }
+                                            font.pixelSize: Style.fontNormal
+                                            font.family: Style.fontFamilyMono
+                                            color: Style.textPrimary
+                                        }
+                                    }
+                                }
+                            }
+
+                            Item { Layout.fillHeight: true }
                         }
                     }
                 }
@@ -370,47 +624,87 @@ Page {
                     spacing: Style.spacingMedium
 
                     // 待机状态 - 开始打印按钮
-                    ColumnLayout {
+                    Rectangle {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        spacing: Style.spacingLarge
                         visible: !isPrinting
+                        color: Style.info
+                        border.width: Style.borderMedium
+                        border.color: Style.divider
 
-                        Item { Layout.fillHeight: true }
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.margins: Style.spacingMedium
+                            spacing: Style.spacingLarge
 
-                        Rectangle {
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: Style.baseUnit * 5
-                            color: Style.info
-                            border.width: Style.borderThin
-                            border.color: Style.divider
+                            // 左侧 - 3DBenchy 图片（水平翻转向左）
+                            Item {
+                                Layout.fillHeight: true
+                                Layout.preferredWidth: parent.width * 0.35
 
-                            Label {
-                                anchors.centerIn: parent
-                                text: "START PRINT"
-                                font.pixelSize: Style.fontXLarge
-                                font.family: Style.fontFamily
-                                font.bold: true
-                                font.letterSpacing: 3
-                                color: Style.bgPrimary
+                                Image {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    anchors.verticalCenterOffset: -parent.height * 0.25  // 大胆向上偏移 25%
+                                    width: parent.width * 0.9
+                                    height: parent.height * 0.7
+                                    source: Qt.resolvedUrl("../assets/example-print.png")
+                                    fillMode: Image.PreserveAspectFit
+                                    smooth: true
+                                    cache: false
+                                    mirror: true   // 水平镜像翻转（向左）
+
+                                    onStatusChanged: {
+                                        if (status === Image.Error) {
+                                            console.error("Failed to load example print image:", source)
+                                        }
+                                    }
+                                }
                             }
 
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: root.navigateToFiles()
+                            // 右侧 - START PRINT 文字
+                            ColumnLayout {
+                                Layout.fillHeight: true
+                                Layout.fillWidth: true
+                                spacing: Style.spacingMedium
+
+                                Item { Layout.fillHeight: true }
+
+                                Label {
+                                    Layout.fillWidth: true
+                                    text: "START PRINT"
+                                    font.pixelSize: Style.fontXXLarge
+                                    font.family: Style.fontFamily
+                                    font.bold: true
+                                    font.letterSpacing: 5
+                                    color: Style.bgPrimary
+                                    wrapMode: Text.WordWrap
+                                }
+
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    height: Style.borderThick
+                                    color: Style.bgPrimary
+                                }
+
+                                Label {
+                                    Layout.fillWidth: true
+                                    text: "Select a G-code file\nto begin printing"
+                                    font.pixelSize: Style.fontLarge
+                                    font.family: Style.fontFamily
+                                    color: Style.bgPrimary
+                                    wrapMode: Text.WordWrap
+                                }
+
+                                Item { Layout.fillHeight: true }
                             }
                         }
 
-                        Label {
-                            Layout.alignment: Qt.AlignHCenter
-                            text: "Select a G-code file to begin printing"
-                            font.pixelSize: Style.fontSmall
-                            font.family: Style.fontFamily
-                            color: Style.textSecondary
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.navigateToFiles()
                         }
-
-                        Item { Layout.fillHeight: true }
                     }
 
                     // 打印状态 - 控制按钮

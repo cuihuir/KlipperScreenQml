@@ -134,7 +134,7 @@ Page {
             // 系统信息
             Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredHeight: Style.baseUnit * 10
+                Layout.preferredHeight: Style.baseUnit * 12
                 color: Style.bgCard
                 border.width: Style.borderThin
                 border.color: Style.divider
@@ -192,6 +192,42 @@ Page {
                             font.pixelSize: Style.fontSmall
                             font.family: Style.fontFamilyMono
                             color: Style.textPrimary
+                        }
+
+                        Label {
+                            text: "THEME"
+                            font.pixelSize: Style.fontSmall
+                            font.family: Style.fontFamily
+                            font.letterSpacing: 1
+                            color: Style.textSecondary
+                        }
+
+                        // 主题切换开关
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: Style.buttonHeightSmall
+                            color: Style.isDarkTheme ? Style.bgSecondary : Style.info
+                            border.width: Style.borderThin
+                            border.color: Style.divider
+
+                            Label {
+                                anchors.centerIn: parent
+                                text: Style.isDarkTheme ? "DARK MODE" : "LIGHT MODE"
+                                font.pixelSize: Style.fontSmall
+                                font.family: Style.fontFamilyMono
+                                font.bold: true
+                                font.letterSpacing: 1
+                                color: Style.isDarkTheme ? Style.accent : Style.bgPrimary
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    Style.isDarkTheme = !Style.isDarkTheme
+                                    console.log("Theme switched to:", Style.isDarkTheme ? "DARK" : "LIGHT")
+                                }
+                            }
                         }
 
                         Label {

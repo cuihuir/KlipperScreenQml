@@ -4,36 +4,39 @@ import QtQuick
 QtObject {
     id: style
 
+    // ============ 主题切换 ============
+    property bool isDarkTheme: false  // false = 亮色主题, true = 暗色主题
+
     // ============ Metro 配色方案（机场指示牌风格） ============
 
-    // 背景色
-    readonly property color bgPrimary: "#000000"        // 纯黑主背景
-    readonly property color bgSecondary: "#1a1a1a"     // 深灰次背景
-    readonly property color bgCard: "#242424"          // 卡片背景
-    readonly property color bgInput: "#1a1a1a"         // 输入框背景
+    // 背景色（根据主题动态切换）
+    readonly property color bgPrimary: isDarkTheme ? "#000000" : "#F5F5F5"        // 主背景
+    readonly property color bgSecondary: isDarkTheme ? "#1a1a1a" : "#ECECEC"     // 次背景
+    readonly property color bgCard: isDarkTheme ? "#242424" : "#FFFFFF"          // 卡片背景
+    readonly property color bgInput: isDarkTheme ? "#1a1a1a" : "#FFFFFF"         // 输入框背景
 
     // 分隔线
-    readonly property color divider: "#333333"         // 分隔线
-    readonly property color border: "#404040"          // 边框（尽量少用）
+    readonly property color divider: isDarkTheme ? "#333333" : "#E0E0E0"         // 分隔线
+    readonly property color border: isDarkTheme ? "#404040" : "#BDBDBD"          // 边框
 
-    // 文字颜色
-    readonly property color textPrimary: "#FFFFFF"     // 主文字-纯白
-    readonly property color textSecondary: "#999999"   // 次要文字-灰
-    readonly property color textDisabled: "#666666"    // 禁用文字
+    // 文字颜色（根据主题动态切换）
+    readonly property color textPrimary: isDarkTheme ? "#FFFFFF" : "#212121"     // 主文字
+    readonly property color textSecondary: isDarkTheme ? "#999999" : "#757575"   // 次要文字
+    readonly property color textDisabled: isDarkTheme ? "#666666" : "#BDBDBD"    // 禁用文字
 
-    // 强调色（机场风-亮黄）
-    readonly property color accent: "#FFEB3B"          // 主强调色-亮黄
-    readonly property color accentDim: "#FBC02D"       // 暗黄
+    // 强调色（机场风 - 在亮色模式下调深）
+    readonly property color accent: isDarkTheme ? "#FFEB3B" : "#F9A825"          // 主强调色-黄
+    readonly property color accentDim: isDarkTheme ? "#FBC02D" : "#F57F17"       // 暗黄
 
-    // 状态色
-    readonly property color success: "#00FF00"         // 成功-工业绿
-    readonly property color warning: "#FF9800"         // 警告-橙
-    readonly property color error: "#FF0000"           // 错误-纯红
-    readonly property color info: "#00BCD4"            // 信息-青
+    // 状态色（亮色模式下使用更柔和的颜色）
+    readonly property color success: isDarkTheme ? "#00FF00" : "#4CAF50"         // 成功-绿
+    readonly property color warning: isDarkTheme ? "#FF9800" : "#FF6F00"         // 警告-橙
+    readonly property color error: isDarkTheme ? "#FF0000" : "#D32F2F"           // 错误-红
+    readonly property color info: isDarkTheme ? "#00BCD4" : "#0097A7"            // 信息-青
 
     // 连接状态
-    readonly property color connected: "#00FF00"       // 已连接-绿
-    readonly property color disconnected: "#FF0000"    // 未连接-红
+    readonly property color connected: isDarkTheme ? "#00FF00" : "#4CAF50"       // 已连接-绿
+    readonly property color disconnected: isDarkTheme ? "#FF0000" : "#D32F2F"    // 未连接-红
 
     // ============ 自适应尺寸系统 ============
 
