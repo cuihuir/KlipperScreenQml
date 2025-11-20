@@ -24,6 +24,7 @@ class MoonrakerClient(QObject):
     temperatureUpdated = Signal(dict)
     printerStateChanged = Signal(str)
     printProgressChanged = Signal(dict)
+    printStatsUpdated = Signal(dict)  # 打印统计信息更新
     positionUpdated = Signal(dict)  # X, Y, Z 位置信息
     messageReceived = Signal(str, str)  # method, data
     fileListReceived = Signal(str)  # JSON string of file list
@@ -56,6 +57,24 @@ class MoonrakerClient(QObject):
         self._print_progress = 0.0
         self._print_filename = ""
         self._error_message = ""  # Klipper错误消息
+
+        # 打印统计信息
+        self._print_duration = 0.0  # 打印时长（秒）
+        self._filament_used = 0.0   # 耗材用量（mm）
+        self._current_layer = 0     # 当前层
+        self._total_layers = 0      # 总层数
+        self._print_thumbnail = ""  # 缩略图 URL
+        self._layer_height = 0.2    # 层高（mm）
+
+        # Fluidd 算法数据
+        self._live_velocity = 0.0          # 实时打印速度 (mm/s)
+        self._live_extruder_velocity = 0.0 # 实时挤出机速度 (mm/s)
+        self._filament_diameter = 1.75     # 耗材直径 (mm)
+        self._file_progress = 0.0          # 文件进度 (0-1)
+        self._estimated_time = 0.0         # 切片预估时间 (秒)
+        self._first_layer_height = 0.2     # 首层高度 (mm)
+        self._object_height = 0.0          # 对象高度 (mm) - 用于计算总层数
+        self._total_duration = 0.0         # 总时长 (秒) - 包括暂停时间
 
         # 位置信息
         self._position_x = 0.0
@@ -105,6 +124,71 @@ class MoonrakerClient(QObject):
     @Property(str, notify=printProgressChanged)
     def printFilename(self):
         return self._print_filename
+
+    @Property(float, notify=printStatsUpdated)
+    def printDuration(self):
+        """打印时长（秒）"""
+        return self._print_duration
+
+    @Property(float, notify=printStatsUpdated)
+    def filamentUsed(self):
+        """耗材用量（mm）"""
+        return self._filament_used
+
+    @Property(int, notify=printStatsUpdated)
+    def currentLayer(self):
+        """当前层 - 使用 Fluidd 算法"""
+        # 优先使用 print_stats.info.current_layer（如果Klipper提供）
+        # 否则计算：ceil((z - first_layer_height) / layer_height + 1)
+        return self._current_layer
+
+    @Property(int, notify=printStatsUpdated)
+    def totalLayers(self):
+        """总层数 - 使用 Fluidd 算法"""
+        # 优先级：
+        # 1. print_stats.info.total_layer
+        # 2. file_metadata.layer_count
+        # 3. 计算：ceil((object_height - first_layer_height) / layer_height + 1)
+        return self._total_layers
+
+    @Property(str, notify=printStatsUpdated)
+    def printThumbnail(self):
+        """缩略图 URL"""
+        return self._print_thumbnail
+
+    @Property(float, notify=printStatsUpdated)
+    def liveVelocity(self):
+        """实时打印速度 (mm/s)"""
+        return self._live_velocity
+
+    @Property(float, notify=printStatsUpdated)
+    def liveFlow(self):
+        """实时流量 (mm³/s) - Fluidd 算法"""
+        import math
+        return (math.pi / 4) * (self._filament_diameter ** 2) * self._live_extruder_velocity
+
+    @Property(float, notify=printStatsUpdated)
+    def fileTimeLeft(self):
+        """文件估算剩余时间 (秒)"""
+        if self._print_duration > 0 and self._file_progress > 0:
+            return (self._print_duration / self._file_progress) - self._print_duration
+        return 0.0
+
+    @Property(float, notify=printStatsUpdated)
+    def slicerTimeLeft(self):
+        """切片估算剩余时间 (秒)"""
+        if self._estimated_time > 0:
+            return self._estimated_time - self._print_duration
+        return 0.0
+
+    @Property(float, notify=printStatsUpdated)
+    def etaTimestamp(self):
+        """预计完成时间戳 (毫秒)"""
+        import time
+        time_left = self.fileTimeLeft if self.fileTimeLeft > 0 else self.slicerTimeLeft
+        if time_left > 0:
+            return (time.time() + time_left) * 1000
+        return 0.0
 
     @Property(str, notify=klipperError)
     def errorMessage(self):
