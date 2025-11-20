@@ -557,8 +557,12 @@ class MoonrakerClient(QObject):
                     filename = result['filename']
                     self.logger.info(f"收到文件元数据: {filename}")
 
-                    # 提取缩略图用于打印状态显示
-                    if 'thumbnails' in result and len(result['thumbnails']) > 0:
+                    # 只处理当前打印文件的元数据（避免其他文件的缩略图覆盖）
+                    # API 返回的 filename 应该与 print_stats.filename 一致（纯文件名）
+                    is_current_file = (self._print_filename and filename == self._print_filename)
+
+                    # 提取缩略图用于打印状态显示（仅当前打印文件）
+                    if is_current_file and 'thumbnails' in result and len(result['thumbnails']) > 0:
                         # 找到最大的缩略图 (Fluidd 算法)
                         thumbnails = result['thumbnails']
                         largest_thumb = max(thumbnails, key=lambda t: t.get('width', 0) * t.get('height', 0))
@@ -574,26 +578,29 @@ class MoonrakerClient(QObject):
 
                             self._print_thumbnail = thumb_url
                             self.logger.info(f"设置打印缩略图: {thumb_url} ({largest_thumb.get('width')}x{largest_thumb.get('height')})")
+                    elif 'thumbnails' in result and len(result['thumbnails']) > 0:
+                        self.logger.warning(f"忽略非当前文件的缩略图: {filename} (当前: {self._print_filename})")
 
-                    # 提取层高和预估时间等元数据 (Fluidd 算法所需)
-                    if 'layer_height' in result:
+                    # 提取层高和预估时间等元数据 (Fluidd 算法所需，仅当前打印文件)
+                    if is_current_file and 'layer_height' in result:
                         self._layer_height = result['layer_height']
                         self.logger.info(f"层高: {self._layer_height}mm")
-                    if 'first_layer_height' in result:
+                    if is_current_file and 'first_layer_height' in result:
                         self._first_layer_height = result['first_layer_height']
                         self.logger.info(f"首层高度: {self._first_layer_height}mm")
-                    if 'estimated_time' in result:
+                    if is_current_file and 'estimated_time' in result:
                         self._estimated_time = result['estimated_time']
                         self.logger.info(f"预估时间: {self._estimated_time}秒")
-                    if 'object_height' in result:
+                    if is_current_file and 'object_height' in result:
                         self._object_height = result['object_height']
                         self.logger.info(f"对象高度: {self._object_height}mm")
 
-                    # 计算总层数 (Fluidd 算法的回退逻辑)
-                    if 'layer_count' in result and result['layer_count']:
+                    # 计算总层数 (Fluidd 算法的回退逻辑，仅当前打印文件)
+                    if is_current_file and 'layer_count' in result and result['layer_count']:
                         self._total_layers = result['layer_count']
                         self.logger.info(f"总层数(metadata): {self._total_layers}")
-                    elif (self._object_height > 0 and
+                    elif (is_current_file and
+                          self._object_height > 0 and
                           self._first_layer_height > 0 and
                           self._layer_height > 0):
                         # Fluidd 计算公式: ceil((object_height - first_layer_height) / layer_height + 1)
@@ -605,14 +612,15 @@ class MoonrakerClient(QObject):
                             self._total_layers = calculated_layers
                             self.logger.info(f"总层数(calculated): {self._total_layers}")
 
-                    # 触发统计更新信号
-                    self.printStatsUpdated.emit({
-                        'duration': self._print_duration,
-                        'filament': self._filament_used,
-                        'current_layer': self._current_layer,
-                        'total_layers': self._total_layers,
-                        'thumbnail': self._print_thumbnail
-                    })
+                    # 触发统计更新信号（仅当前打印文件）
+                    if is_current_file:
+                        self.printStatsUpdated.emit({
+                            'duration': self._print_duration,
+                            'filament': self._filament_used,
+                            'current_layer': self._current_layer,
+                            'total_layers': self._total_layers,
+                            'thumbnail': self._print_thumbnail
+                        })
 
                     self.fileMetadataReceived.emit(filename, json.dumps(result))
                     return
@@ -746,9 +754,8 @@ class MoonrakerClient(QObject):
                 if new_filename != self._print_filename and new_filename:
                     self._print_filename = new_filename
                     self.logger.info(f"当前打印文件: {new_filename}")
-                    # 构建完整路径请求元数据
-                    metadata_path = f"gcodes/{new_filename}" if not new_filename.startswith("gcodes/") else new_filename
-                    self.requestFileMetadata(metadata_path)
+                    # 直接使用文件名请求元数据（API 不需要 gcodes/ 前缀）
+                    self.requestFileMetadata(new_filename)
                 elif new_filename != self._print_filename:
                     self._print_filename = new_filename
                     self.logger.info(f"当前打印文件: {new_filename}")
