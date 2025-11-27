@@ -13,6 +13,8 @@ import logging
 from PySide6.QtCore import QObject, Signal, Slot, Property
 from backend.moonraker_client import MoonrakerClient
 from backend.config_manager import ConfigManager
+from backend.ui_state import UIState
+from backend.navigation_manager import NavigationManager
 
 
 class Application(QObject):
@@ -54,14 +56,20 @@ class Application(QObject):
         self._printer_port = self.config.get("printer.port", 7125)
         self.moonraker = MoonrakerClient(host=self._printer_host, port=self._printer_port, parent=self)
 
+        # 创建 UI 状态管理器
+        self.ui_state = UIState(parent=self)
+
+        # 创建导航管理器
+        self.navigation_manager = NavigationManager(parent=self)
+
         # 应用状态
         self._theme = "dark"
         self._app_name = "QtKs - Modern 3D Printer Interface"
         self._version = "1.0.0"
 
-        # UI 配置
-        self._ui_width = self.config.get("ui.width", 800)
-        self._ui_height = self.config.get("ui.height", 480)
+        # UI 配置 - 使用 1920x440 超宽屏
+        self._ui_width = self.config.get("ui.width", 1920)
+        self._ui_height = self.config.get("ui.height", 440)
 
         # 连接信号
         self._connect_signals()
@@ -91,6 +99,21 @@ class Application(QObject):
     def printer(self):
         """返回打印机客户端对象给QML使用"""
         return self.moonraker
+
+    @Property(QObject, constant=True)
+    def uiState(self):
+        """返回UI状态管理器对象给QML使用"""
+        return self.ui_state
+
+    @Property(QObject, constant=True)
+    def navigationManager(self):
+        """返回导航管理器对象给QML使用"""
+        return self.navigation_manager
+
+    @Property(QObject, constant=True)
+    def settings(self):
+        """返回配置管理器对象给QML使用"""
+        return self.config
 
     @Property(int, constant=True)
     def uiWidth(self):
@@ -122,6 +145,10 @@ class Application(QObject):
         初始化完成后发出initialized信号。
         """
         self.logger.info("初始化应用...")
+
+        # 启动UI状态管理
+        self.ui_state.start_idle_detection()
+        self.logger.info("UI状态管理器已启动")
 
         # 测试连接
         if self.moonraker.testConnection():

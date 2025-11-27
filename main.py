@@ -79,6 +79,7 @@ def main():
 
     # 注册后端对象到 QML
     engine.rootContext().setContextProperty("app", backend_app)
+    engine.rootContext().setContextProperty("navigationManager", backend_app.navigationManager)
 
     # 加载 QML
     qml_file = Path(__file__).parent / "qml" / "MainWindow.qml"

@@ -11,3 +11,16 @@ NumericKeypad 1.0 NumericKeypad.qml
 ErrorOverlay 1.0 ErrorOverlay.qml
 NotificationToast 1.0 NotificationToast.qml
 NotificationItem 1.0 NotificationItem.qml
+BottomNavBar 1.0 BottomNavBar.qml
+NavigationButton 1.0 NavigationButton.qml
+PlaceholderToast 1.0 PlaceholderToast.qml
+ConfirmDialog 1.0 ConfirmDialog.qml
+TempDisplay 1.0 TempDisplay.qml
+StatusIndicator 1.0 StatusIndicator.qml
+HomeWidget 1.0 HomeWidget.qml
+TempWidget 1.0 TempWidget.qml
+FanWidget 1.0 FanWidget.qml
+LedWidget 1.0 LedWidget.qml
+PrintControlWidget 1.0 PrintControlWidget.qml
+FunctionIcon 1.0 FunctionIcon.qml
+GlobalNavButtons 1.0 GlobalNavButtons.qml
