@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import ".."
+import "."
 
 /**
  * Metro风格按钮组件

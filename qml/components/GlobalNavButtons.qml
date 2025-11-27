@@ -33,6 +33,11 @@ Rectangle {
      */
     property real buttonHeight: 80
 
+    /**
+     * StackView 引用（用于控制导航）
+     */
+    property StackView stackView: null
+
     // ===== 视觉样式 =====
     color: Style.bgSecondary
     border.width: Style.borderThin
@@ -47,12 +52,12 @@ Rectangle {
         anchors.margins: Style.spacingSmall
         spacing: Style.spacingMedium
 
-        // ===== HOME 按钮 =====
+        // ===== HOME 按钮（圆形） =====
         Rectangle {
             id: homeButton
 
             Layout.preferredWidth: root.buttonWidth - Style.spacingSmall * 2
-            Layout.preferredHeight: root.buttonHeight
+            Layout.preferredHeight: root.buttonWidth - Style.spacingSmall * 2
             Layout.alignment: Qt.AlignHCenter
 
             color: homeMouseArea.pressed ? Qt.darker(Style.accent, 1.2) :
@@ -61,7 +66,7 @@ Rectangle {
 
             border.width: Style.borderMedium
             border.color: Qt.lighter(Style.accent, 1.2)
-            radius: Style.radiusSmall
+            radius: width / 2  // 圆形
 
             // 状态转换动画
             Behavior on color {
@@ -71,28 +76,12 @@ Rectangle {
                 }
             }
 
-            // 按钮内容
-            ColumnLayout {
+            // HOME 图标（居中）
+            Text {
                 anchors.centerIn: parent
-                spacing: Style.spacingXSmall
-
-                // HOME 图标
-                Text {
-                    text: "🏠"
-                    font.pixelSize: Style.fontXLarge
-                    font.family: Style.fontFamily
-                    Layout.alignment: Qt.AlignHCenter
-                }
-
-                // HOME 文本
-                Text {
-                    text: "HOME"
-                    font.pixelSize: Style.fontSmall
-                    font.family: Style.fontFamily
-                    font.bold: true
-                    color: Style.bgPrimary
-                    Layout.alignment: Qt.AlignHCenter
-                }
+                text: "🏠"
+                font.pixelSize: Style.fontXLarge
+                font.family: Style.fontFamily
             }
 
             // 鼠标交互
@@ -103,8 +92,14 @@ Rectangle {
                 cursorShape: Qt.PointingHandCursor
 
                 onClicked: {
-                    console.log("GlobalNavButtons: HOME button clicked")
-                    navigationManager.popToRoot()
+                    console.log("GlobalNavButtons: HOME button clicked, stackView:", root.stackView)
+                    // 同时操作 StackView 和 NavigationManager
+                    if (root.stackView && root.stackView.depth > 1) {
+                        root.stackView.pop(null)  // Pop to root
+                    }
+                    if (navigationManager) {
+                        navigationManager.popToRoot()
+                    }
                 }
             }
 
@@ -118,16 +113,16 @@ Rectangle {
             }
         }
 
-        // ===== RETURN 按钮 =====
+        // ===== RETURN/BACK 按钮（"<" 图标） =====
         Rectangle {
             id: returnButton
 
             Layout.preferredWidth: root.buttonWidth - Style.spacingSmall * 2
-            Layout.preferredHeight: root.buttonHeight
+            Layout.preferredHeight: root.buttonWidth - Style.spacingSmall * 2
             Layout.alignment: Qt.AlignHCenter
 
-            // 根据 navigationManager.canGoBack 动态启用/禁用
-            enabled: navigationManager.canGoBack
+            // 根据导航深度动态启用/禁用
+            enabled: root.stackView ? root.stackView.depth > 1 : false
 
             color: {
                 if (!enabled) return Style.bgCard
@@ -139,7 +134,7 @@ Rectangle {
             border.width: Style.borderMedium
             border.color: enabled ? Qt.lighter(Style.info, 1.2) : Style.border
             radius: Style.radiusSmall
-            opacity: enabled ? 1.0 : 0.5
+            opacity: enabled ? 1.0 : 0.4
 
             // 状态转换动画
             Behavior on color {
@@ -156,30 +151,14 @@ Rectangle {
                 }
             }
 
-            // 按钮内容
-            ColumnLayout {
+            // "<" 返回图标
+            Text {
                 anchors.centerIn: parent
-                spacing: Style.spacingXSmall
-
-                // RETURN 图标
-                Text {
-                    text: "⬅️"
-                    font.pixelSize: Style.fontXLarge
-                    font.family: Style.fontFamily
-                    opacity: parent.parent.enabled ? 1.0 : 0.5
-                    Layout.alignment: Qt.AlignHCenter
-                }
-
-                // RETURN 文本
-                Text {
-                    text: "RETURN"
-                    font.pixelSize: Style.fontXSmall
-                    font.family: Style.fontFamily
-                    font.bold: true
-                    color: Style.bgPrimary
-                    opacity: parent.parent.enabled ? 1.0 : 0.5
-                    Layout.alignment: Qt.AlignHCenter
-                }
+                text: "<"
+                font.pixelSize: Style.fontXXLarge
+                font.family: Style.fontFamily
+                font.bold: true
+                color: parent.enabled ? Style.bgPrimary : Style.textDisabled
             }
 
             // 鼠标交互
@@ -191,8 +170,14 @@ Rectangle {
                 cursorShape: parent.enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
 
                 onClicked: {
-                    console.log("GlobalNavButtons: RETURN button clicked")
-                    navigationManager.popPage()
+                    console.log("GlobalNavButtons: RETURN button clicked, stackView depth:", root.stackView.depth)
+                    // 同时操作 StackView 和 NavigationManager
+                    if (root.stackView && root.stackView.depth > 1) {
+                        root.stackView.pop()
+                    }
+                    if (navigationManager) {
+                        navigationManager.popPage()
+                    }
                 }
             }
 
@@ -214,7 +199,7 @@ Rectangle {
         // ===== 底部：导航深度指示器（调试用） =====
         Text {
             visible: false  // 生产环境隐藏
-            text: "Depth: " + navigationManager.currentDepth
+            text: navigationManager ? ("Depth: " + navigationManager.currentDepth) : "Depth: -"
             font.pixelSize: Style.fontXSmall
             font.family: Style.fontFamilyMono
             color: Style.textDisabled
@@ -225,8 +210,12 @@ Rectangle {
     // ===== 调试日志 =====
     Component.onCompleted: {
         console.log("GlobalNavButtons created")
-        console.log("navigationManager.canGoBack:", navigationManager.canGoBack)
-        console.log("navigationManager.currentPage:", navigationManager.currentPage)
+        if (navigationManager) {
+            console.log("navigationManager.canGoBack:", navigationManager.canGoBack)
+            console.log("navigationManager.currentPage:", navigationManager.currentPage)
+        } else {
+            console.warn("navigationManager is not available yet")
+        }
     }
 
     // 监听导航状态变化

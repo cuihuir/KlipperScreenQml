@@ -26,14 +26,14 @@
 
 **Purpose**: 创建项目结构、Style系统和基础组件
 
-- [ ] T001 从ui_design设计图提取颜色和间距，更新 qml/Style.qml
-- [ ] T002 [P] 创建底部导航栏组件 qml/components/BottomNavBar.qml
-- [ ] T003 [P] 创建占位符Toast组件 qml/components/PlaceholderToast.qml
-- [ ] T004 [P] 创建确认对话框组件 qml/components/ConfirmDialog.qml
-- [ ] T005 [P] 创建UI状态管理模块 backend/ui_state.py
-- [ ] T006 [P] 整理图标资源: 从 ui_design/3dUI/ 复制可用素材到 assets/icons/，缺少的再补充
-- [ ] T007 更新 qml/components/qmldir 注册新组件
-- [ ] T008 扩展 backend/application.py 暴露UIState到QML
+- [X] T001 从ui_design设计图提取颜色和间距，更新 qml/Style.qml
+- [X] T002 [P] 创建底部导航栏组件 qml/components/BottomNavBar.qml
+- [X] T003 [P] 创建占位符Toast组件 qml/components/PlaceholderToast.qml
+- [X] T004 [P] 创建确认对话框组件 qml/components/ConfirmDialog.qml
+- [X] T005 [P] 创建UI状态管理模块 backend/ui_state.py
+- [X] T006 [P] 整理图标资源: 从 ui_design/3dUI/ 复制可用素材到 assets/icons/，缺少的再补充
+- [X] T007 更新 qml/components/qmldir 注册新组件
+- [X] T008 扩展 backend/application.py 暴露UIState到QML
 
 **Checkpoint**: 基础组件和状态管理框架就绪
 
@@ -45,16 +45,16 @@
 
 **⚠️ CRITICAL**: 必须完成此阶段后才能开始用户故事实现
 
-- [ ] T009 重构 qml/MainWindow.qml 实现StackLayout页面路由
-- [ ] T010 集成BottomNavBar到MainWindow，实现4按钮导航 (首页/控制/文件/设置)
-- [ ] T011 [P] 创建温度卡片组件 qml/components/TempCard.qml (80px最小触摸目标)
-- [ ] T012 [P] 创建文件卡片组件 qml/components/FileCard.qml (80px最小触摸目标)
-- [ ] T013 [P] 创建打印模式选择对话框 qml/components/PrintModeDialog.qml (80px最小触摸目标)
-- [ ] T014 扩展 backend/moonraker_client.py 添加文件元数据获取和缩略图处理
+- [X] T009 重构 qml/MainWindow.qml 实现StackLayout页面路由
+- [X] T010 集成BottomNavBar到MainWindow，实现4按钮导航 (首页/控制/文件/设置)
+- [X] T011 [P] 创建温度卡片组件 qml/components/TempCard.qml (80px最小触摸目标)
+- [X] T012 [P] 创建文件卡片组件 qml/components/FileCard.qml (80px最小触摸目标)
+- [X] T013 [P] 创建打印模式选择对话框 qml/components/PrintModeDialog.qml (80px最小触摸目标)
+- [X] T014 扩展 backend/moonraker_client.py 添加文件元数据获取和缩略图处理
 - [ ] T015 扩展 backend/config_manager.py 添加UI设置项 (亮度/音量/语言/时区)
-- [ ] T016 [P] 添加触摸目标验证任务 (11.3寸80px×80px最小尺寸)
-- [ ] T017 验证组件qmldir注册完整性 (确保所有QML组件正确注册)
-- [ ] T018 验证11.3寸屏幕字体大小适配 (最小20px字体)
+- [X] T016 [P] 添加触摸目标验证任务 (11.3寸80px×80px最小尺寸)
+- [X] T017 验证组件qmldir注册完整性 (确保所有QML组件正确注册)
+- [X] T018 验证11.3寸屏幕字体大小适配 (最小20px字体)
 
 **Checkpoint**: 页面路由、导航和核心组件就绪，可开始用户故事实现
 

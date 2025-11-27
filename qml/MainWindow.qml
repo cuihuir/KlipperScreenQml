@@ -45,6 +45,7 @@ ApplicationWindow {
             id: globalNav
             Layout.fillHeight: true
             Layout.preferredWidth: 80
+            stackView: stackView  // 传递 StackView 引用
         }
 
         // 右侧：页面内容区域（StackView）

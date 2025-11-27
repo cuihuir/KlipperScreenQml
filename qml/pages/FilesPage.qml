@@ -8,6 +8,7 @@ Page {
     id: root
     property var printer: null
     property var app: null
+    property StackView stackView: StackView.view
     property bool isLoading: false
     property string selectedFile: ""  // 当前选中的文件
 
@@ -1163,5 +1164,15 @@ Page {
         if (printer && printer.isConnected) {
             loadFiles()
         }
+        console.log("FilesPage created")
+    }
+
+    // ===== 生命周期钩子 =====
+    StackView.onActivated: {
+        console.log("FilesPage activated, stackView:", stackView)
+    }
+
+    StackView.onDeactivated: {
+        console.log("FilesPage deactivated")
     }
 }

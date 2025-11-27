@@ -5,7 +5,7 @@ QtObject {
     id: style
 
     // ============ 主题切换 ============
-    property bool isDarkTheme: false  // false = 亮色主题, true = 暗色主题
+    property bool isDarkTheme: true  // false = 亮色主题, true = 暗色主题 (设计图为暗色主题)
 
     // ============ Metro 配色方案（机场指示牌风格） ============
 
@@ -41,8 +41,8 @@ QtObject {
     // ============ 自适应尺寸系统 ============
 
     // 基础单位（根据窗口尺寸动态计算）
-    property real windowWidth: 1920
-    property real windowHeight: 1080
+    property real windowWidth: 1920  // 宽屏设计
+    property real windowHeight: 440  // 超宽屏 4.36:1 比例
 
     function updateWindowSize(w, h) {
         windowWidth = w

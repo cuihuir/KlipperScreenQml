@@ -144,15 +144,15 @@
 - [x] T017 [US7] 在 HomePage 中实现 FunctionIcon 点击导航
   - 连接 `onClicked` 到 `pageRegistry.navigateTo()`
   - 同步调用 `navigationManager.pushPage()`
-- [ ] T018 [US7] 为现有页面（SettingsPage, ControlPage, FilesPage）添加生命周期钩子
+- [x] T018 [US7] 为现有页面（SettingsPage, ControlPage, FilesPage）添加生命周期钩子
   - 添加 `StackView.onActivated` 钩子（打印日志）
   - 添加 `StackView.onDeactivated` 钩子（打印日志）
   - 绑定 `property StackView stackView: StackView.view`
-- [ ] T019 [US7] 测试导航流程：主页 → 设置页 → 主页
+- [x] T019 [US7] 测试导航流程：主页 → 设置页 → 主页
   - 验证 HOME 按钮始终可点击
   - 验证 RETURN 按钮在主页时禁用，在设置页时启用
   - 验证导航栈深度正确更新
-- [ ] T020 [US7] 测试导航流程：主页 → 控制页 → 子页面 → RETURN → 主页
+- [x] T020 [US7] 测试导航流程：主页 → 控制页 → 子页面 → RETURN → 主页
   - 验证多层导航栈管理
   - 验证 `popPage()` 逐层返回
   - 验证 `popToRoot()` 直接返回主页

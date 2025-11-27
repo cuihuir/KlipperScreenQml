@@ -8,6 +8,7 @@ Page {
     id: root
     property var printer: null
     property var app: null
+    property StackView stackView: StackView.view
 
     signal showError(string message)
 
@@ -818,5 +819,18 @@ Page {
         }
 
         xhr.send()
+    }
+
+    // ===== 生命周期钩子 =====
+    StackView.onActivated: {
+        console.log("SettingsPage activated, stackView:", stackView)
+    }
+
+    StackView.onDeactivated: {
+        console.log("SettingsPage deactivated")
+    }
+
+    Component.onCompleted: {
+        console.log("SettingsPage created")
     }
 }

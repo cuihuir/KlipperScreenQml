@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import ".."
 import "../components"
 
 /**
@@ -151,11 +152,11 @@ Page {
                         Layout.fillHeight: true
 
                         onIconClicked: (iconId, targetPage) => {
-                            console.log("Navigating to:", targetPage)
-                            // 通过 StackView 导航到目标页面
-                            if (root.stackView) {
-                                root.stackView.push(Qt.resolvedUrl("../pages/" + targetPage.charAt(0).toUpperCase() + targetPage.slice(1) + "Page.qml"))
-                                navigationManager.pushPage(targetPage)
+                            console.log("FunctionIcon clicked:", targetPage)
+                            // 使用 ApplicationWindow 的 pageRegistry 导航
+                            var appWindow = root.Window.window
+                            if (appWindow && appWindow.pageRegistry) {
+                                appWindow.pageRegistry.navigateTo(targetPage)
                             }
                         }
                     }
@@ -170,11 +171,11 @@ Page {
                         Layout.fillHeight: true
 
                         onIconClicked: (iconId, targetPage) => {
-                            console.log("Navigating to:", targetPage)
-                            // 通过 StackView 导航到目标页面
-                            if (root.stackView) {
-                                root.stackView.push(Qt.resolvedUrl("../pages/" + targetPage.charAt(0).toUpperCase() + targetPage.slice(1) + "Page.qml"))
-                                navigationManager.pushPage(targetPage)
+                            console.log("FunctionIcon clicked:", targetPage)
+                            // 使用 ApplicationWindow 的 pageRegistry 导航
+                            var appWindow = root.Window.window
+                            if (appWindow && appWindow.pageRegistry) {
+                                appWindow.pageRegistry.navigateTo(targetPage)
                             }
                         }
                     }
@@ -189,11 +190,11 @@ Page {
                         Layout.fillHeight: true
 
                         onIconClicked: (iconId, targetPage) => {
-                            console.log("Navigating to:", targetPage)
-                            // 通过 StackView 导航到目标页面
-                            if (root.stackView) {
-                                root.stackView.push(Qt.resolvedUrl("../pages/" + targetPage.charAt(0).toUpperCase() + targetPage.slice(1) + "Page.qml"))
-                                navigationManager.pushPage(targetPage)
+                            console.log("FunctionIcon clicked:", targetPage)
+                            // 使用 ApplicationWindow 的 pageRegistry 导航
+                            var appWindow = root.Window.window
+                            if (appWindow && appWindow.pageRegistry) {
+                                appWindow.pageRegistry.navigateTo(targetPage)
                             }
                         }
                     }
