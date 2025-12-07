@@ -202,14 +202,16 @@ HomeWidget {
                 anchors.fill: parent
                 spacing: 0
 
-                // 左侧列：50%，小船图标居中
+                // 左侧列：50%，小船图标居中（向上偏移）
                 Item {
                     width: parent.width / 2
                     height: parent.height
 
                     Image {
-                        anchors.centerIn: parent
-                        width: Math.min(parent.width * 0.95, parent.height * 0.95)
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.verticalCenterOffset: -parent.height * 0.2
+                        width: Math.min(parent.width * 1.5, parent.height * 1.5)
                         height: width
                         source: "../../assets/icons/benchy.png"
                         fillMode: Image.PreserveAspectFit
@@ -229,13 +231,15 @@ HomeWidget {
                     }
                 }
 
-                // 右侧列：50%，"打印"文字居中
+                // 右侧列：50%，"打印"文字居中（向上偏移）
                 Item {
                     width: parent.width / 2
                     height: parent.height
 
                     Text {
-                        anchors.centerIn: parent
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.verticalCenterOffset: -parent.height * 0.2
                         text: "打印"
                         font.pixelSize: Math.min(parent.width * 0.6, parent.height * 0.6)
                         font.family: Style.fontFamily
