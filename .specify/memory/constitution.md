@@ -1,3 +1,18 @@
+<!--
+Sync Impact Report:
+- Version change: 1.0.0 → 1.1.0
+- Modified principles: None
+- Added sections:
+  - IV. QML 导入规范 / QML Import Standards (new principle)
+- Removed sections: None
+- Templates requiring updates:
+  ✅ .specify/templates/plan-template.md (verified - no updates needed)
+  ✅ .specify/templates/spec-template.md (verified - no updates needed)
+  ✅ .specify/templates/tasks-template.md (verified - no updates needed)
+- Follow-up TODOs: None
+- Bump rationale: MINOR version bump (new principle added regarding QML import standards)
+-->
+
 # QtKs 项目宪章 / QtKs Project Constitution
 
 ## 核心原则 / Core Principles
@@ -43,6 +58,27 @@
 - Implement core features first (P1 priority)
 - Each feature must be independently testable
 - Follow MVP (Minimum Viable Product) principles
+
+### IV. QML 导入规范 / QML Import Standards
+
+**中文版：**
+- 禁止使用相对路径导入（例如：`import "../components"`）
+- 所有 QML 导入必须使用绝对路径或模块名称
+- 理由：相对路径导入会导致模块解析问题，降低代码可维护性和可测试性
+- 推荐做法：
+  - 使用命名的 QML 模块导入（例如：`import QtQuick.Controls`）
+  - 对于项目内部组件，使用从项目根目录计算的绝对路径
+  - 配置 QML 模块路径以支持清晰的模块命名空间
+
+**English Version:**
+- Relative path imports are PROHIBITED (e.g., `import "../components"`)
+- All QML imports MUST use absolute paths or module names
+- Rationale: Relative path imports cause module resolution issues, reducing code
+  maintainability and testability
+- Recommended practices:
+  - Use named QML module imports (e.g., `import QtQuick.Controls`)
+  - For internal project components, use absolute paths from project root
+  - Configure QML module paths to support clear module namespaces
 
 ## 开发流程 / Development Workflow
 
@@ -94,10 +130,18 @@
 - 本宪章优先于所有其他开发实践
 - 修改宪章需要明确记录和用户批准
 - 所有 AI 生成的代码和文档必须遵循本宪章
+- 版本控制遵循语义化版本（Semantic Versioning）：
+  - MAJOR：不兼容的治理或原则移除/重新定义
+  - MINOR：新增原则/章节或实质性扩展指导
+  - PATCH：澄清、措辞、拼写修正等非语义改进
 
 **English Version:**
 - This constitution supersedes all other development practices
 - Constitution amendments require explicit documentation and user approval
 - All AI-generated code and documentation must comply with this constitution
+- Versioning follows Semantic Versioning:
+  - MAJOR: Backward incompatible governance/principle removals or redefinitions
+  - MINOR: New principle/section added or materially expanded guidance
+  - PATCH: Clarifications, wording, typo fixes, non-semantic refinements
 
-**版本 / Version**: 1.0.0 | **批准日期 / Ratified**: 2025-11-26 | **最后修订 / Last Amended**: 2025-11-26
+**版本 / Version**: 1.1.0 | **批准日期 / Ratified**: 2025-11-26 | **最后修订 / Last Amended**: 2025-11-28

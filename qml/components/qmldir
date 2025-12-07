@@ -24,3 +24,5 @@ LedWidget 1.0 LedWidget.qml
 PrintControlWidget 1.0 PrintControlWidget.qml
 FunctionIcon 1.0 FunctionIcon.qml
 GlobalNavButtons 1.0 GlobalNavButtons.qml
+ThemedIcon 1.0 ThemedIcon.qml
+CircularProgress 1.0 CircularProgress.qml

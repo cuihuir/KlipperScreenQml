@@ -83,10 +83,11 @@ Rectangle {
     border.color: {
         if (widgetState === "active") return Style.accent
         if (widgetState === "error") return Style.error
+        if (hovered && isInteractive) return Qt.lighter(Style.border, 1.2)
         return Style.border
     }
 
-    radius: Style.radiusTiny
+    radius: Style.radiusSmall  // 从 radiusTiny 改为 radiusSmall，更明显的圆角
 
     // ===== 状态转换动画 =====
     Behavior on color {
@@ -127,7 +128,7 @@ Rectangle {
     // ===== 布局容器 =====
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: Style.spacingMedium
+        anchors.margins: Style.spacingNormal  // 统一使用 spacingNormal 确保一致性
         spacing: Style.spacingSmall
 
         // 标题栏
@@ -179,39 +180,29 @@ Rectangle {
             width: Style.iconSizeSmall
             height: Style.iconSizeSmall
 
-            // 加载指示器（旋转动画）
-            Rectangle {
+            // Metro 点阵式加载指示器（3 个圆点交替闪烁）
+            Row {
                 visible: root.widgetState === "updating"
                 anchors.centerIn: parent
-                width: Style.iconSizeSmall
-                height: Style.iconSizeSmall
-                color: "transparent"
-                border.width: Style.borderMedium
-                border.color: Style.accent
-                radius: width / 2
+                spacing: 3
 
-                // 旋转动画
-                RotationAnimator {
-                    target: parent
-                    from: 0
-                    to: 360
-                    duration: 1000
-                    loops: Animation.Infinite
-                    running: root.widgetState === "updating"
-                }
-
-                // 半圆蒙版（创建加载动画效果）
-                Rectangle {
-                    anchors.fill: parent
-                    anchors.margins: Style.borderMedium
-                    radius: width / 2
-                    color: Style.bgPrimary
-                    clip: true
-
+                Repeater {
+                    model: 3
                     Rectangle {
-                        width: parent.width
-                        height: parent.height / 2
-                        color: Style.bgSecondary
+                        width: 6
+                        height: 6
+                        radius: 3
+                        color: Style.accent
+
+                        SequentialAnimation on opacity {
+                            loops: Animation.Infinite
+                            running: root.widgetState === "updating"
+                            // 每个圆点延迟 200ms 开始动画
+                            PauseAnimation { duration: index * 200 }
+                            NumberAnimation { from: 0.3; to: 1.0; duration: 400; easing.type: Easing.InOutQuad }
+                            NumberAnimation { from: 1.0; to: 0.3; duration: 400; easing.type: Easing.InOutQuad }
+                            PauseAnimation { duration: (2 - index) * 200 }
+                        }
                     }
                 }
             }

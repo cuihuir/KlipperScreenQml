@@ -93,7 +93,7 @@ Page {
                 onClicked: {
                     console.log("Navigate to ControlLevel4")
                     if (root.stackView) {
-                        root.stackView.push("ControlLevel4.qml")
+                        root.stackView.push(Qt.resolvedUrl("ControlLevel4.qml"))
                         if (navigationManager) {
                             navigationManager.pushPage("control-level4")
                         }

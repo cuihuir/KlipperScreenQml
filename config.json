@@ -1,6 +1,6 @@
 {
   "printer": {
-    "host": "192.168.88.131",
+    "host": "192.168.31.65",
     "port": 7125,
     "name": "My 3D Printer"
   },
@@ -9,6 +9,13 @@
     "language": "zh_CN",
     "width": 1920,
     "height": 440
+  },
+  "theme": {
+    "selected_theme": "material-dark",
+    "theme_dir": "KlipperScreen/styles",
+    "fallback_theme": "base",
+    "custom_icons_enabled": false,
+    "custom_icons_dir": ""
   },
   "temperature": {
     "extruder_presets": [0, 180, 200, 220, 240, 260],

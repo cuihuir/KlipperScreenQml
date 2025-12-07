@@ -27,106 +27,136 @@ ApplicationWindow {
     // 全局属性
     property var printer: app ? app.printer : null
     property var uiState: app ? app.uiState : null
-    readonly property bool isConnected: printer ? printer.connected : false
+    readonly property bool isConnected: (printer && printer.connected) ? true : false
+
+    // 暴露 pageRegistry 供子页面使用
+    property alias pageRegistry: pageRegistry
+
+    // 全局常量：导航按钮宽度
+    readonly property int navButtonWidth: 80
+
+    // ===== 自定义 Overlay 区域，避免覆盖左侧导航按钮 =====
+    Overlay.modal: Item {
+        // 只在右侧区域显示遮罩
+        Rectangle {
+            color: Qt.rgba(0, 0, 0, 0.8)
+            x: navButtonWidth
+            y: 0
+            width: parent.width - navButtonWidth
+            height: parent.height
+        }
+    }
+
+    Overlay.modeless: Item {
+        // modeless 不需要遮罩
+    }
 
     // 更新样式系统的窗口尺寸
     Component.onCompleted: {
         Style.updateWindowSize(width, height)
-        console.log("✓ MainWindow loaded - Metro UI (1920x440) with iOS-style navigation")
+        console.log("✓ MainWindow loaded - Metro UI (1920x440) with iOS-style navigation [v2-dialog-fix]")
     }
 
-    // ===== 主布局：左侧全局按钮 + 右侧 StackView =====
-    RowLayout {
-        anchors.fill: parent
-        spacing: 0
+    // ===== 错误 Toast 辅助函数 =====
+    function showErrorToast(message) {
+        errorToastLabel.text = message
+        errorToast.visible = true
+        errorToastTimer.restart()
+    }
 
-        // 左侧：全局导航按钮（80px 宽）
-        Components.GlobalNavButtons {
-            id: globalNav
-            Layout.fillHeight: true
-            Layout.preferredWidth: 80
-            stackView: stackView  // 传递 StackView 引用
-        }
+    // ===== 主布局：页面内容区域（StackView）=====
+    // 注意：GlobalNavButtons 移到了底部，使用绝对定位，确保始终在最上层
+    StackView {
+        id: stackView
+        anchors.left: parent.left
+        anchors.leftMargin: navButtonWidth  // 左侧留出导航按钮空间
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
 
-        // 右侧：页面内容区域（StackView）
-        StackView {
-            id: stackView
-            Layout.fillWidth: true
-            Layout.fillHeight: true
+        // 初始页面：HomePage
+        initialItem: homePageComponent
 
-            // 初始页面：HomePage
-            initialItem: homePageComponent
+        // ===== 转场动画配置（iOS 风格） =====
 
-            // ===== 转场动画配置（iOS 风格） =====
-
-            // Push 动画：新页面从右侧滑入
-            pushEnter: Transition {
-                PropertyAnimation {
-                    property: "x"
-                    from: stackView.width
-                    to: 0
-                    duration: Style.durationNormal
-                    easing.type: Easing.OutCubic
-                }
-                PropertyAnimation {
-                    property: "opacity"
-                    from: 0.8
-                    to: 1.0
-                    duration: Style.durationNormal
-                }
+        // Push 动画：新页面从右侧滑入
+        pushEnter: Transition {
+            PropertyAnimation {
+                property: "x"
+                from: stackView.width
+                to: 0
+                duration: Style.durationNormal
+                easing.type: Easing.OutCubic
             }
-
-            // Push 动画：旧页面轻微向左移动
-            pushExit: Transition {
-                PropertyAnimation {
-                    property: "x"
-                    from: 0
-                    to: -stackView.width * 0.3
-                    duration: Style.durationNormal
-                    easing.type: Easing.OutCubic
-                }
-                PropertyAnimation {
-                    property: "opacity"
-                    from: 1.0
-                    to: 0.5
-                    duration: Style.durationNormal
-                }
-            }
-
-            // Pop 动画：旧页面向右滑出
-            popExit: Transition {
-                PropertyAnimation {
-                    property: "x"
-                    from: 0
-                    to: stackView.width
-                    duration: Style.durationNormal
-                    easing.type: Easing.OutCubic
-                }
-                PropertyAnimation {
-                    property: "opacity"
-                    from: 1.0
-                    to: 0.0
-                    duration: Style.durationNormal
-                }
-            }
-
-            // Pop 动画：下层页面从左侧恢复
-            popEnter: Transition {
-                PropertyAnimation {
-                    property: "x"
-                    from: -stackView.width * 0.3
-                    to: 0
-                    duration: Style.durationNormal
-                    easing.type: Easing.OutCubic
-                }
-                PropertyAnimation {
-                    property: "opacity"
-                    from: 0.5
-                    to: 1.0
-                    duration: Style.durationNormal
-                }
+            PropertyAnimation {
+                property: "opacity"
+                from: 0.8
+                to: 1.0
+                duration: Style.durationNormal
             }
         }
+
+        // Push 动画：旧页面轻微向左移动并完全隐藏
+        pushExit: Transition {
+            PropertyAnimation {
+                property: "x"
+                from: 0
+                to: -stackView.width * 0.3
+                duration: Style.durationNormal
+                easing.type: Easing.OutCubic
+            }
+            PropertyAnimation {
+                property: "opacity"
+                from: 1.0
+                to: 0.0  // 完全隐藏，防止文字透过
+                duration: Style.durationNormal
+            }
+        }
+
+        // Pop 动画：旧页面向右滑出
+        popExit: Transition {
+            PropertyAnimation {
+                property: "x"
+                from: 0
+                to: stackView.width
+                duration: Style.durationNormal
+                easing.type: Easing.OutCubic
+            }
+            PropertyAnimation {
+                property: "opacity"
+                from: 1.0
+                to: 0.0
+                duration: Style.durationNormal
+            }
+        }
+
+        // Pop 动画：下层页面从左侧恢复（从完全隐藏状态）
+        popEnter: Transition {
+            PropertyAnimation {
+                property: "x"
+                from: -stackView.width * 0.3
+                to: 0
+                duration: Style.durationNormal
+                easing.type: Easing.OutCubic
+            }
+            PropertyAnimation {
+                property: "opacity"
+                from: 0.0  // 从完全隐藏开始，防止文字透过
+                to: 1.0
+                duration: Style.durationNormal
+            }
+        }
+    }
+
+    // ===== 全局导航按钮（绝对定位，高 z-index）=====
+    Components.GlobalNavButtons {
+        id: globalNav
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        width: navButtonWidth
+        stackView: stackView
+        z: 10000  // 确保在 Overlay 之上
     }
 
     // ===== 页面组件定义 =====
@@ -155,6 +185,13 @@ ApplicationWindow {
     Component {
         id: settingsPageComponent
         Pages.SettingsPage {
+            printer: root.printer
+        }
+    }
+
+    Component {
+        id: jobStatusPageComponent
+        Pages.JobStatusPage {
             printer: root.printer
         }
     }
@@ -195,6 +232,7 @@ ApplicationWindow {
             "files": filesPageComponent,
             "settings": settingsPageComponent,
             "printing": printingPageComponent,
+            "job_status": jobStatusPageComponent,
             "screensaver": screensaverPageComponent
         })
 
@@ -209,6 +247,7 @@ ApplicationWindow {
             // 验证页面是否存在
             if (!pages[pageId]) {
                 console.error("Page not found:", pageId)
+                showErrorToast("页面不存在: " + pageId)
                 return false
             }
 
@@ -218,17 +257,31 @@ ApplicationWindow {
                 return false
             }
 
-            // Push 到 StackView
-            if (properties) {
-                stackView.push(pages[pageId], properties)
-            } else {
-                stackView.push(pages[pageId])
+            try {
+                // Push 到 StackView
+                var item
+                if (properties) {
+                    item = stackView.push(pages[pageId], properties)
+                } else {
+                    item = stackView.push(pages[pageId])
+                }
+
+                // 检查页面加载是否成功
+                if (!item) {
+                    console.error("Failed to load page:", pageId)
+                    showErrorToast("页面加载失败")
+                    return false
+                }
+
+                // 同步更新 NavigationManager
+                navigationManager.pushPage(pageId)
+
+                return true
+            } catch (error) {
+                console.error("Navigation error:", error)
+                showErrorToast("导航出错")
+                return false
             }
-
-            // 同步更新 NavigationManager
-            navigationManager.pushPage(pageId)
-
-            return true
         }
 
         /**
@@ -290,9 +343,10 @@ ApplicationWindow {
 
     // ===== 占位符 Toast（全局） =====
 
-    Components.PlaceholderToast {
-        id: placeholderToast
-    }
+    // TEMPORARY: Disabled for debugging
+    // Components.PlaceholderToast {
+    //     id: placeholderToast
+    // }
 
     // ===== 通知 Toast（用于打印机通知） =====
 
@@ -312,7 +366,7 @@ ApplicationWindow {
             anchors.centerIn: parent
             text: "打印机状态更新"
             font.pixelSize: Style.fontMedium
-            color: "#FFFFFF"
+            color: Style.bgPrimary
         }
 
         // 自动隐藏定时器
@@ -329,7 +383,8 @@ ApplicationWindow {
      */
     function showPlaceholder(featureName: string) {
         console.log("占位符功能点击:", featureName)
-        placeholderToast.show(featureName)
+        // placeholderToast.show(featureName)  // TEMPORARY: Disabled
+        console.log("Placeholder requested:", featureName)
     }
 
     /**
@@ -370,5 +425,48 @@ ApplicationWindow {
     Shortcut {
         sequence: "Escape"
         onActivated: pageRegistry.goBack()
+    }
+
+    // ===== 错误 Toast =====
+    Rectangle {
+        id: errorToast
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.topMargin: Style.spacingLarge
+        visible: false
+        z: 9999
+
+        width: 400
+        height: 80
+        radius: Style.radiusSmall
+        color: Style.error
+        border.width: Style.borderThin
+        border.color: Qt.lighter(Style.error, 1.3)
+
+        Label {
+            id: errorToastLabel
+            anchors.centerIn: parent
+            text: ""
+            font.pixelSize: Style.fontMedium
+            font.family: Style.fontFamily
+            color: Style.bgPrimary
+            horizontalAlignment: Text.AlignHCenter
+        }
+
+        // 自动隐藏定时器
+        Timer {
+            id: errorToastTimer
+            interval: 3000
+            running: false
+            repeat: false
+            onTriggered: errorToast.visible = false
+        }
+
+        // 淡入淡出动画
+        Behavior on opacity {
+            NumberAnimation { duration: Style.durationFast }
+        }
+
+        opacity: visible ? 1.0 : 0.0
     }
 }

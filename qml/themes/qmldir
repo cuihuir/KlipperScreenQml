@@ -1,0 +1,2 @@
+module themes
+singleton KlipperColors 1.0 KlipperColors.qml

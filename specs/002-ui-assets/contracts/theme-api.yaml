@@ -1,0 +1,564 @@
+# Theme API Contract / 主题 API 契约
+# Internal Python API for QtKs UI Assets System
+# 内部 Python API，用于 QtKs UI 素材系统
+
+version: 1.0.0
+type: internal-python-api
+description: |
+  Internal API contract for theme management, color parsing, and icon loading
+  in the QtKs project. Not an HTTP API - these are Python class interfaces.
+
+  QtKs 项目的主题管理、颜色解析和图标加载的内部 API 契约。
+  不是 HTTP API - 这些是 Python 类接口。
+
+---
+
+## ThemeManager API / 主题管理器 API
+
+module: backend.theme_manager
+class: ThemeManager
+
+### loadTheme
+
+```python
+def loadTheme(theme_name: str) -> Theme:
+    """
+    加载指定主题的所有素材 / Load all assets for specified theme
+
+    Args:
+        theme_name (str): 主题名称 / Theme name
+            可用值 / Valid values: "material-dark", "material-darker",
+            "material-light", "colorized", "z-bolt", "base"
+
+    Returns:
+        Theme: 主题对象，包含颜色和图标 / Theme object with colors and icons
+
+    Raises:
+        ThemeNotFoundError: 主题目录不存在 / Theme directory not found
+        ThemeLoadError: 主题素材加载失败 / Theme asset loading failed
+        ValidationError: 主题名称无效 / Invalid theme name
+
+    Performance:
+        - 首次加载 / First load: < 100ms
+        - 缓存加载 / Cached load: < 10ms
+
+    Example:
+        >>> manager = ThemeManager(theme_dir="KlipperScreen/styles")
+        >>> theme = manager.loadTheme("material-dark")
+        >>> print(theme.name)  # "material-dark"
+        >>> print(theme.icon_count)  # 104
+    """
+```
+
+### parseThemeColors
+
+```python
+def parseThemeColors(css_file_path: str) -> ColorPalette:
+    """
+    从 CSS 文件解析颜色定义 / Parse color definitions from CSS file
+
+    Args:
+        css_file_path (str): CSS 文件绝对路径 / CSS file absolute path
+            示例 / Example: "KlipperScreen/styles/base.css"
+
+    Returns:
+        ColorPalette: 颜色调色板对象 / ColorPalette object
+            包含所有 @define-color 定义 / Contains all @define-color definitions
+
+    Raises:
+        FileNotFoundError: CSS 文件不存在 / CSS file not found
+        ParseError: CSS 解析失败 / CSS parsing failed
+        ValidationError: 颜色格式无效 / Invalid color format
+
+    Algorithm:
+        1. 读取 CSS 文件内容 / Read CSS file content
+        2. 提取 @define-color 定义 / Extract @define-color definitions
+        3. 递归解析颜色引用 (@bg, @text) / Resolve color references
+        4. 验证颜色格式 (#RRGGBB) / Validate color formats
+        5. 返回 ColorPalette / Return ColorPalette
+
+    Performance:
+        - 解析 10-15 个颜色定义 / Parse 10-15 colors: < 5ms
+
+    Example:
+        >>> palette = manager.parseThemeColors("base.css")
+        >>> print(palette.bg)  # "#13181C"
+        >>> print(palette.color1)  # "#ED6500"
+    """
+```
+
+### listAvailableThemes
+
+```python
+def listAvailableThemes() -> List[str]:
+    """
+    列出所有可用主题 / List all available themes
+
+    Returns:
+        List[str]: 主题名称列表 / List of theme names
+            示例 / Example: ["material-dark", "material-light", ...]
+
+    Performance:
+        - 扫描目录 / Directory scan: < 10ms
+
+    Example:
+        >>> themes = manager.listAvailableThemes()
+        >>> print(themes)
+        ["base", "material-dark", "material-darker", "material-light", "colorized", "z-bolt"]
+    """
+```
+
+### reloadCurrentTheme
+
+```python
+def reloadCurrentTheme() -> None:
+    """
+    重新加载当前主题 / Reload current theme
+
+    用途 / Use case:
+        主题文件更新后重新加载 / Reload after theme file updates
+
+    Raises:
+        ThemeLoadError: 重新加载失败 / Reload failed
+
+    Side effects:
+        - 清空图标缓存 / Clear icon cache
+        - 发出 themeChanged 信号 / Emit themeChanged signal
+
+    Performance:
+        - 重新加载时间 / Reload time: < 100ms
+    """
+```
+
+---
+
+## IconLoader API / 图标加载器 API
+
+module: backend.icon_loader
+class: IconLoader
+
+### loadIcon
+
+```python
+def loadIcon(icon_name: str, theme: Theme) -> IconAsset:
+    """
+    加载指定图标，优先使用缓存 / Load specified icon, prefer cache
+
+    Args:
+        icon_name (str): 图标名称（不含扩展名） / Icon name (without extension)
+            示例 / Example: "home", "settings", "printer"
+        theme (Theme): 当前主题 / Current theme
+
+    Returns:
+        IconAsset: 图标对象或回退占位符 / Icon object or fallback placeholder
+
+    Raises:
+        IconNotFoundError: 图标文件不存在且无回退 / Icon not found and no fallback
+
+    Fallback behavior / 回退行为:
+        1. 在主题图标目录查找 / Search in theme icons directory
+        2. 在基础主题查找 / Search in base theme
+        3. 返回默认占位符图标 / Return default placeholder icon
+
+    Performance:
+        - 缓存命中 / Cache hit: < 5ms
+        - 缓存未命中 / Cache miss: < 50ms
+
+    Example:
+        >>> loader = IconLoader(cache=AssetCache())
+        >>> icon = loader.loadIcon("home", current_theme)
+        >>> print(icon.file_path)  # Path(".../ material-dark/images/home.svg")
+        >>> print(icon.is_cached)  # True
+    """
+```
+
+### preloadIcons
+
+```python
+def preloadIcons(icon_names: List[str], theme: Theme) -> None:
+    """
+    预加载图标列表到缓存 / Preload icon list to cache
+
+    Args:
+        icon_names (List[str]): 图标名称列表 / Icon name list
+            示例 / Example: ["home", "back", "settings"]
+        theme (Theme): 当前主题 / Current theme
+
+    Purpose / 用途:
+        应用启动时预加载关键图标，减少首次渲染延迟
+        Preload critical icons at app startup to reduce initial render delay
+
+    Performance:
+        - 每个图标 / Per icon: ~10-20ms
+        - 6 个图标 / 6 icons: ~60-120ms (可接受 / acceptable)
+
+    Example:
+        >>> critical_icons = ["home", "back", "files", "control", "settings", "dashboard"]
+        >>> loader.preloadIcons(critical_icons, current_theme)
+        # Icons now in cache for instant rendering
+    """
+```
+
+### getIconPath
+
+```python
+def getIconPath(icon_name: str, theme: Theme, format: str = "file") -> str:
+    """
+    获取图标路径（URL 格式）/ Get icon path (URL format)
+
+    Args:
+        icon_name (str): 图标名称 / Icon name
+        theme (Theme): 当前主题 / Current theme
+        format (str): 路径格式 / Path format
+            可用值 / Valid values: "file", "qrc"
+
+    Returns:
+        str: 图标 URL 路径 / Icon URL path
+            file 格式 / file format: "file:///path/to/icon.svg"
+            qrc 格式 / qrc format: "qrc:/assets/icons/home.svg"
+
+    Example:
+        >>> path = loader.getIconPath("home", theme, format="file")
+        >>> print(path)  # "file:///home/tope/.../home.svg"
+    """
+```
+
+---
+
+## CSSParser API / CSS 解析器 API
+
+module: backend.css_parser
+class: GTKCSSColorResolver
+
+### parse_file
+
+```python
+def parse_file(css_path: str) -> Dict[str, str]:
+    """
+    解析 CSS 文件返回颜色字典 / Parse CSS file and return color dictionary
+
+    Args:
+        css_path (str): CSS 文件路径 / CSS file path
+
+    Returns:
+        Dict[str, str]: 颜色名称到值的映射 / Color name to value mapping
+            示例 / Example: {"bg": "#13181C", "color1": "#ED6500"}
+
+    Algorithm:
+        1. 正则表达式提取 @define-color / Regex extract @define-color
+        2. 递归解析变量引用 / Recursively resolve references
+        3. 验证颜色格式 / Validate color formats
+        4. 转换为大写十六进制 / Convert to uppercase hex
+
+    Performance:
+        - 解析时间 / Parse time: < 5ms
+
+    Example:
+        >>> parser = GTKCSSColorResolver()
+        >>> colors = parser.parse_file("base.css")
+        >>> print(colors["bg"])  # "#13181C"
+    """
+```
+
+### to_qml_format
+
+```python
+def to_qml_format(colors: Dict[str, str]) -> str:
+    """
+    转换为 QML Singleton 格式 / Convert to QML Singleton format
+
+    Args:
+        colors (Dict[str, str]): 颜色字典 / Color dictionary
+
+    Returns:
+        str: QML 文件内容 / QML file content
+            包含 pragma Singleton 和 readonly property 定义
+            Contains pragma Singleton and readonly property definitions
+
+    Example:
+        >>> qml_content = parser.to_qml_format(colors)
+        >>> with open("KlipperColors.qml", "w") as f:
+        ...     f.write(qml_content)
+    """
+```
+
+---
+
+## AssetCache API / 素材缓存 API
+
+module: backend.asset_cache
+class: AssetCache
+
+### get
+
+```python
+def get(icon_name: str) -> Optional[IconAsset]:
+    """
+    获取图标并更新访问时间 / Get icon and update access time
+
+    Args:
+        icon_name (str): 图标名称 / Icon name
+
+    Returns:
+        Optional[IconAsset]: 图标对象或 None / Icon object or None
+
+    Side effects:
+        - 更新访问时间戳用于 LRU / Update access timestamp for LRU
+
+    Performance:
+        - 查找时间 / Lookup time: O(1), < 1ms
+    """
+```
+
+### set
+
+```python
+def set(icon_name: str, icon: IconAsset) -> None:
+    """
+    添加图标到缓存，必要时淘汰 / Add icon to cache, evict if necessary
+
+    Args:
+        icon_name (str): 图标名称 / Icon name
+        icon (IconAsset): 图标对象 / Icon object
+
+    Behavior:
+        1. 计算图标大小 / Calculate icon size
+        2. 如果超过限制，LRU 淘汰 / If exceeds limit, LRU evict
+        3. 添加到缓存 / Add to cache
+        4. 更新缓存大小 / Update cache size
+
+    Constraints:
+        - cache_size_bytes <= max_cache_size (20MB)
+
+    Performance:
+        - 添加时间 / Add time: < 5ms
+        - 淘汰时间 / Eviction time: < 10ms
+    """
+```
+
+### evict_lru
+
+```python
+def evict_lru() -> None:
+    """
+    淘汰最久未使用的图标 / Evict least recently used icon
+
+    Algorithm:
+        1. 查找最小访问时间戳 / Find minimum access timestamp
+        2. 移除图标 / Remove icon
+        3. 更新缓存大小 / Update cache size
+
+    Performance:
+        - 淘汰时间 / Eviction time: O(n), < 10ms
+    """
+```
+
+### cache_usage_percent
+
+```python
+@property
+def cache_usage_percent() -> float:
+    """
+    缓存使用百分比 / Cache usage percentage
+
+    Returns:
+        float: 使用百分比 (0-100) / Usage percentage (0-100)
+
+    Example:
+        >>> cache.cache_usage_percent
+        12.5  # 12.5% of 20MB used
+    """
+```
+
+---
+
+## QML-exposed Properties / QML 暴露属性
+
+class: ThemeProvider (QObject)
+inherits: PySide6.QtCore.QObject
+
+### Properties / 属性
+
+```python
+# 只读属性 / Read-only properties
+currentTheme: str          # 当前主题名称 / Current theme name
+backgroundColor: str       # 背景色 / Background color
+textColor: str            # 文字色 / Text color
+color1: str               # 主题色 1 / Primary color 1
+color2: str               # 主题色 2 / Primary color 2
+color3: str               # 主题色 3 / Primary color 3
+color4: str               # 主题色 4 / Primary color 4
+activeColor: str          # 激活状态色 / Active state color
+warningColor: str         # 警告色 / Warning color
+errorColor: str           # 错误色 / Error color
+```
+
+### Signals / 信号
+
+```python
+themeChanged()                        # 主题切换时发出 / Emitted on theme switch
+themeLoadError(errorMessage: str)     # 主题加载失败 / Theme load error
+```
+
+### Slots / 槽函数
+
+```python
+@Slot(str, result=str)
+def getIconPath(icon_name: str) -> str:
+    """
+    获取图标路径 / Get icon path
+
+    Args:
+        icon_name: 图标名称 / Icon name
+
+    Returns:
+        str: 图标 URL 路径 / Icon URL path
+
+    Example (QML):
+        Image {
+            source: ThemeProvider.getIconPath("home")
+        }
+    """
+
+@Slot(result='QStringList')
+def getAvailableThemes() -> List[str]:
+    """
+    获取可用主题列表 / Get available themes list
+
+    Returns:
+        List[str]: 主题名称列表 / Theme name list
+    """
+
+@Slot(str)
+def setTheme(theme_name: str) -> None:
+    """
+    设置当前主题 / Set current theme
+
+    Args:
+        theme_name: 主题名称 / Theme name
+
+    Side effects:
+        - 加载新主题 / Load new theme
+        - 发出 themeChanged 信号 / Emit themeChanged signal
+        - 清空图标缓存 / Clear icon cache
+    """
+```
+
+---
+
+## Error Types / 错误类型
+
+```python
+class ThemeNotFoundError(Exception):
+    """主题目录不存在 / Theme directory not found"""
+    pass
+
+class ThemeLoadError(Exception):
+    """主题加载失败 / Theme loading failed"""
+    pass
+
+class IconNotFoundError(Exception):
+    """图标文件不存在 / Icon file not found"""
+    pass
+
+class ParseError(Exception):
+    """CSS 解析失败 / CSS parsing failed"""
+    pass
+
+class ValidationError(Exception):
+    """数据验证失败 / Data validation failed"""
+    pass
+```
+
+---
+
+## Usage Examples / 使用示例
+
+### Python Backend / Python 后端
+
+```python
+# 初始化主题系统 / Initialize theme system
+from backend.theme_manager import ThemeManager
+from backend.asset_cache import AssetCache
+
+cache = AssetCache(max_cache_size=20 * 1024 * 1024)
+manager = ThemeManager(
+    theme_dir="KlipperScreen/styles",
+    cache=cache
+)
+
+# 加载主题 / Load theme
+theme = manager.loadTheme("material-dark")
+print(f"Loaded theme: {theme.name}")
+print(f"Colors: {theme.colors.to_dict()}")
+print(f"Icons: {theme.icon_count}")
+
+# 创建 QML 提供者 / Create QML provider
+from backend.theme_provider import ThemeProvider
+provider = ThemeProvider(theme)
+
+# 暴露给 QML / Expose to QML
+engine.rootContext().setContextProperty("ThemeProvider", provider)
+```
+
+### QML Frontend / QML 前端
+
+```qml
+import QtQuick
+
+Rectangle {
+    // 使用主题颜色 / Use theme colors
+    color: ThemeProvider.backgroundColor
+
+    Image {
+        // 使用主题图标 / Use theme icon
+        source: ThemeProvider.getIconPath("home")
+        sourceSize: Qt.size(48, 48)
+        cache: true
+        asynchronous: true
+    }
+
+    Text {
+        color: ThemeProvider.textColor
+        text: "Current theme: " + ThemeProvider.currentTheme
+    }
+
+    Button {
+        onClicked: {
+            // 切换主题 / Switch theme
+            ThemeProvider.setTheme("material-light")
+        }
+    }
+
+    Connections {
+        target: ThemeProvider
+        function onThemeChanged() {
+            console.log("Theme changed!")
+        }
+    }
+}
+```
+
+---
+
+## Performance Guarantees / 性能保证
+
+| 操作 Operation | 目标 Target | 实际 Actual |
+|---------------|------------|------------|
+| 加载主题 / Load theme | < 200ms | ~100ms |
+| 解析 CSS / Parse CSS | < 10ms | ~5ms |
+| 加载图标（首次）/ Load icon (first) | < 50ms | ~10-30ms |
+| 加载图标（缓存）/ Load icon (cached) | < 5ms | ~1-3ms |
+| 预加载 6 个图标 / Preload 6 icons | < 150ms | ~60-120ms |
+| 缓存查找 / Cache lookup | < 1ms | < 1ms |
+| LRU 淘汰 / LRU eviction | < 10ms | ~5ms |
+
+---
+
+## Version History / 版本历史
+
+**v1.0.0** (2025-12-07)
+- 初始版本 / Initial version
+- 定义核心 API / Define core APIs
+- ThemeManager, IconLoader, CSSParser, AssetCache
+- QML ThemeProvider 接口 / QML ThemeProvider interface

@@ -170,8 +170,20 @@ Rectangle {
                 cursorShape: parent.enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
 
                 onClicked: {
-                    console.log("GlobalNavButtons: RETURN button clicked, stackView depth:", root.stackView.depth)
-                    // 同时操作 StackView 和 NavigationManager
+                    // 先检查是否有打开的 Overlay（Dialog/Popup）
+                    var overlays = root.Window.window.Overlay.overlay
+                    if (overlays && overlays.children.length > 0) {
+                        // 查找打开的 Popup/Dialog
+                        for (var i = overlays.children.length - 1; i >= 0; i--) {
+                            var child = overlays.children[i]
+                            if (child.visible && typeof child.close === "function") {
+                                child.close()
+                                return  // 关闭对话框后不执行导航
+                            }
+                        }
+                    }
+
+                    // 如果没有对话框，执行正常导航
                     if (root.stackView && root.stackView.depth > 1) {
                         root.stackView.pop()
                     }

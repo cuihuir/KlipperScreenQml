@@ -489,110 +489,137 @@ Page {
         id: fileModel
     }
 
-    // 文件详情对话框
-    Rectangle {
-        id: fileDetailsDialog
-        anchors.fill: parent
-        visible: false
-        color: Qt.rgba(0, 0, 0, 0.8)
-        z: 999
+    // 文件详情对话框 - 使用 Loader 按需加载
+    Loader {
+        id: fileDetailsDialogLoader
+        active: false  // 初始不加载，节省内存
 
+        // 暴露属性供外部访问
         property string selectedFile: ""
         property string thumbnailData: ""
-        property var metadata: null  // 存储元数据对象
+        property var metadata: null
 
-        MouseArea {
-            anchors.fill: parent
-            onClicked: {}  // 阻止点击穿透
-        }
+        sourceComponent: Component {
+            Dialog {
+                id: fileDetailsDialog
 
-        Rectangle {
-            anchors.centerIn: parent
-            width: Math.min(parent.width * 0.85, Style.baseUnit * 70)
-            height: Math.min(parent.height * 0.85, Style.baseUnit * 45)
-            color: Style.bgCard
-            border.width: Style.borderMedium
-            border.color: Style.divider
+                // Dialog 配置
+                modal: true
+                closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside  // ESC 键或点击外部关闭
 
-            ColumnLayout {
-                anchors.fill: parent
-                spacing: 0
+                // 去除默认内边距和标题
+                padding: 0
+                topPadding: 0
+                bottomPadding: 0
+                leftPadding: 0
+                rightPadding: 0
 
-                // 标题栏
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: Style.baseUnit * 5
-                    color: Style.bgSecondary
+                // 去除默认的标题栏
+                title: ""
 
-                    Label {
-                        anchors.centerIn: parent
-                        text: fileDetailsDialog.selectedFile
-                        font.pixelSize: Style.fontXLarge
-                        font.family: Style.fontFamily
-                        font.bold: true
-                        color: Style.textPrimary
-                        elide: Text.ElideMiddle
-                        width: parent.width - Style.spacingLarge * 4
-                    }
+                // 辅助属性 - 计算布局位置
+                readonly property int dialogNavWidth: ApplicationWindow.window ? ApplicationWindow.window.navButtonWidth : 80
+                readonly property int paginationWidth: Style.baseUnit * 8  // 翻页按钮区域宽度
+
+                // 计算文件列表区域：窗口宽度 - 导航按钮 - 页面外边距*2 - 翻页按钮 - 列表与翻页间距
+                readonly property int fileListDisplayWidth: (ApplicationWindow.window ? ApplicationWindow.window.width : 1920)
+                                                           - dialogNavWidth
+                                                           - Style.spacingLarge * 2  // 页面左右外边距
+                                                           - paginationWidth
+                                                           - Style.spacingLarge  // 列表与翻页间距
+
+                // 对话框宽度匹配文件列表显示区域，减少400px避免覆盖翻页按钮
+                width: fileListDisplayWidth - 400
+                height: Math.min(ApplicationWindow.window ? ApplicationWindow.window.height * 0.85 : 350, Style.baseUnit * 45)
+
+                // x 定位：左侧贴近文件列表左边界
+                x: dialogNavWidth + Style.spacingLarge
+                y: ApplicationWindow.window ? (ApplicationWindow.window.height - height) / 2 : 0
+
+                // 背景和边框
+                background: Rectangle {
+                    color: Style.bgCard
+                    border.width: Style.borderMedium
+                    border.color: Style.divider
                 }
 
-                // 内容区域 - 左右分栏
-                Item {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
+                // 属性绑定到 Loader
+                property string selectedFile: fileDetailsDialogLoader.selectedFile
+                property string thumbnailData: fileDetailsDialogLoader.thumbnailData
+                property var metadata: fileDetailsDialogLoader.metadata
 
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.margins: Style.spacingLarge * 2
-                        spacing: Style.spacingLarge * 2
+                // Dialog 内容 - 三部分纵向布局
+                contentItem: RowLayout {
+                    spacing: Style.spacingLarge
 
-                        // 左侧 - 缩略图
-                        Rectangle {
-                            Layout.preferredWidth: Style.baseUnit * 25
-                            Layout.fillHeight: true
-                            color: Style.bgSecondary
-                            border.width: Style.borderThin
-                            border.color: Style.divider
+                    // ===== 第一部分：缩略图（左侧，正方形）=====
+                    Rectangle {
+                        Layout.preferredWidth: Math.min(fileDetailsDialog.height * 0.8, Style.baseUnit * 35)
+                        Layout.preferredHeight: Layout.preferredWidth  // 正方形
+                        Layout.alignment: Qt.AlignVCenter
+                        color: Style.bgSecondary
+                        border.width: Style.borderThin
+                        border.color: Style.divider
 
-                            Image {
+                        Image {
+                            anchors.fill: parent
+                            anchors.margins: Style.spacingMedium
+                            source: fileDetailsDialog.thumbnailData
+                            fillMode: Image.PreserveAspectFit
+                            asynchronous: true
+                            cache: false
+
+                            Label {
                                 anchors.centerIn: parent
-                                width: Math.min(parent.width - Style.spacingLarge * 2, Style.baseUnit * 23)
-                                height: Math.min(parent.height - Style.spacingLarge * 2, Style.baseUnit * 23)
-                                source: fileDetailsDialog.thumbnailData
-                                fillMode: Image.PreserveAspectFit
-                                asynchronous: true
-                                cache: false
-
-                                Label {
-                                    anchors.centerIn: parent
-                                    text: "NO\nPREVIEW"
-                                    font.pixelSize: Style.fontLarge
-                                    font.family: Style.fontFamily
-                                    font.bold: true
-                                    font.letterSpacing: 2
-                                    color: Style.textDisabled
-                                    horizontalAlignment: Text.AlignHCenter
-                                    visible: parent.status !== Image.Ready || fileDetailsDialog.thumbnailData === ""
-                                }
+                                text: "NO\nPREVIEW"
+                                font.pixelSize: Style.fontXLarge
+                                font.family: Style.fontFamily
+                                font.bold: true
+                                font.letterSpacing: 2
+                                color: Style.textDisabled
+                                horizontalAlignment: Text.AlignHCenter
+                                visible: parent.status !== Image.Ready || fileDetailsDialog.thumbnailData === ""
                             }
                         }
+                    }
 
-                        // 右侧 - 元数据信息
+                    // ===== 第二部分：信息区域（中间，更长）=====
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        spacing: Style.spacingMedium
+
+                        // 文件名标题
+                        Label {
+                            Layout.fillWidth: true
+                            text: fileDetailsDialog.selectedFile
+                            font.pixelSize: Style.fontXLarge
+                            font.family: Style.fontFamily
+                            font.bold: true
+                            color: Style.textPrimary
+                            elide: Text.ElideMiddle
+                            wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                            maximumLineCount: 2
+                        }
+
+                        // 分隔线
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: Style.borderThin
+                            color: Style.divider
+                        }
+
+                        // 元数据信息（可滚动）
                         ScrollView {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
                             clip: true
 
-                            ColumnLayout {
-                                width: parent.width - Style.spacingMedium * 2
-                                spacing: Style.spacingMedium
-
-                                // 元数据信息网格
-                                GridLayout {
-                                    Layout.fillWidth: true
-                                    columns: 2
-                                    rowSpacing: Style.spacingSmall
-                                    columnSpacing: Style.spacingLarge
+                            GridLayout {
+                                width: parent.width - Style.spacingMedium
+                                columns: 2
+                                rowSpacing: Style.spacingSmall
+                                columnSpacing: Style.spacingLarge
 
                                     // 已修改时间
                                     Label {
@@ -725,72 +752,15 @@ Page {
                                         font.family: Style.fontFamilyMono
                                         color: Style.textPrimary
                                     }
-                                }
-                            }
-                        }
-                    }
-                }
+                                }  // GridLayout
+                        }  // ScrollView
+                    }  // ColumnLayout (第二部分信息区域)
 
-                // 按钮区域
-                Item {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: Style.baseUnit * 7
-
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.margins: Style.spacingLarge
-                        spacing: Style.spacingLarge
-
-                        // 删除按钮
-                        Rectangle {
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            color: Style.error
-                            border.width: Style.borderMedium
-                            border.color: Style.divider
-
-                            Label {
-                                anchors.centerIn: parent
-                                text: "删除"
-                                font.pixelSize: Style.fontXLarge
-                                font.family: Style.fontFamily
-                                font.bold: true
-                                color: Style.bgPrimary
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    fileDetailsDialog.visible = false
-                                    confirmDelete(fileDetailsDialog.selectedFile)
-                                }
-                            }
-                        }
-
-                        // 取消按钮
-                        Rectangle {
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            color: Style.bgSecondary
-                            border.width: Style.borderMedium
-                            border.color: Style.divider
-
-                            Label {
-                                anchors.centerIn: parent
-                                text: "取消"
-                                font.pixelSize: Style.fontXLarge
-                                font.family: Style.fontFamily
-                                font.bold: true
-                                color: Style.textPrimary
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: fileDetailsDialog.visible = false
-                            }
-                        }
+                    // ===== 第三部分：按钮区域（右侧，纵向排列）=====
+                    ColumnLayout {
+                        Layout.preferredWidth: Style.baseUnit * 12
+                        Layout.fillHeight: true
+                        spacing: Style.spacingMedium
 
                         // 打印按钮
                         Rectangle {
@@ -799,6 +769,7 @@ Page {
                             color: Style.success
                             border.width: Style.borderMedium
                             border.color: Style.divider
+                            radius: Style.radiusSmall
 
                             Label {
                                 anchors.centerIn: parent
@@ -814,15 +785,68 @@ Page {
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
                                     startPrint(fileDetailsDialog.selectedFile)
-                                    fileDetailsDialog.visible = false
+                                    fileDetailsDialog.close()
                                 }
                             }
-                        }
-                    }
-                }
-            }
-        }
-    }
+                        }  // Rectangle (打印按钮)
+
+                        // 删除按钮
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            color: Style.error
+                            border.width: Style.borderMedium
+                            border.color: Style.divider
+                            radius: Style.radiusSmall
+
+                            Label {
+                                anchors.centerIn: parent
+                                text: "删除"
+                                font.pixelSize: Style.fontXLarge
+                                font.family: Style.fontFamily
+                                font.bold: true
+                                color: Style.bgPrimary
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    fileDetailsDialog.close()
+                                    confirmDelete(fileDetailsDialog.selectedFile)
+                                }
+                            }
+                        }  // Rectangle (删除按钮)
+
+                        // 取消按钮
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            color: Style.bgSecondary
+                            border.width: Style.borderMedium
+                            border.color: Style.divider
+                            radius: Style.radiusSmall
+
+                            Label {
+                                anchors.centerIn: parent
+                                text: "取消"
+                                font.pixelSize: Style.fontXLarge
+                                font.family: Style.fontFamily
+                                font.bold: true
+                                color: Style.textPrimary
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: fileDetailsDialog.close()
+                            }
+                        }  // Rectangle (取消按钮)
+                    }  // ColumnLayout (第三部分按钮区域)
+                }  // RowLayout (contentItem)
+            }  // Dialog
+        }  // Component
+    }  // Loader
 
     // 删除确认对话框
     Rectangle {
@@ -999,20 +1023,31 @@ Page {
     }
 
     function showFileDetails(filename) {
-        fileDetailsDialog.selectedFile = filename
-        fileDetailsDialog.metadata = null
-        fileDetailsDialog.thumbnailData = ""
+        // 设置 Loader 的属性
+        fileDetailsDialogLoader.selectedFile = filename
+        fileDetailsDialogLoader.metadata = null
+        fileDetailsDialogLoader.thumbnailData = ""
 
         // 先使用已有的小缩略图作为临时显示
         for (var i = 0; i < fileModel.count; i++) {
             if (fileModel.get(i).filename === filename) {
-                fileDetailsDialog.thumbnailData = fileModel.get(i).thumbnail
+                fileDetailsDialogLoader.thumbnailData = fileModel.get(i).thumbnail
                 break
             }
         }
 
         console.log("Showing file details for:", filename)
-        fileDetailsDialog.visible = true
+
+        // 激活 Loader 并打开 Dialog
+        if (!fileDetailsDialogLoader.active) {
+            fileDetailsDialogLoader.active = true
+        }
+        // 使用 Qt.callLater 确保 Loader 完成加载
+        Qt.callLater(function() {
+            if (fileDetailsDialogLoader.item) {
+                fileDetailsDialogLoader.item.open()
+            }
+        })
 
         // 异步请求完整元数据和大尺寸缩略图
         if (printer) {
@@ -1080,13 +1115,14 @@ Page {
     // 监听元数据响应以更新详情对话框
     Connections {
         target: printer
-        enabled: printer !== null && fileDetailsDialog.visible
+        enabled: printer !== null && fileDetailsDialogLoader.active && fileDetailsDialogLoader.item && fileDetailsDialogLoader.item.opened
 
         function onFileMetadataReceived(filename, metadataJson) {
-            if (fileDetailsDialog.visible && fileDetailsDialog.selectedFile === filename) {
+            if (fileDetailsDialogLoader.active && fileDetailsDialogLoader.item &&
+                fileDetailsDialogLoader.item.opened && fileDetailsDialogLoader.selectedFile === filename) {
                 try {
                     var metadata = JSON.parse(metadataJson)
-                    fileDetailsDialog.metadata = metadata
+                    fileDetailsDialogLoader.metadata = metadata
 
                     var largeThumbUrl = ""
 
@@ -1102,7 +1138,7 @@ Page {
                             var apiUrl = "http://" + printer.apiHost + ":" + printer.apiPort
                             var filePath = "gcodes/" + largestThumb.relative_path
                             largeThumbUrl = apiUrl + "/server/files/" + filePath + "?date=" + Date.now()
-                            fileDetailsDialog.thumbnailData = largeThumbUrl
+                            fileDetailsDialogLoader.thumbnailData = largeThumbUrl
                             console.log("Updated dialog with large thumbnail:", largestThumb.width + "x" + largestThumb.height)
                         }
                     }

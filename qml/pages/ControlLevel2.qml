@@ -93,7 +93,7 @@ Page {
                 onClicked: {
                     console.log("Navigate to ControlLevel3")
                     if (root.stackView) {
-                        root.stackView.push("ControlLevel3.qml")
+                        root.stackView.push(Qt.resolvedUrl("ControlLevel3.qml"))
                         if (navigationManager) {
                             navigationManager.pushPage("control-level3")
                         }
@@ -137,14 +137,15 @@ Page {
     }
 
     StackView.onActivated: {
-        console.log("ControlLevel2 activated, depth:", stackView ? stackView.depth : "-")
+        console.log("✅ ControlLevel2 activated, depth:", root.stackView ? root.stackView.depth : "-")
     }
 
     StackView.onDeactivated: {
-        console.log("ControlLevel2 deactivated")
+        console.log("⏸️  ControlLevel2 deactivated")
     }
 
     Component.onCompleted: {
-        console.log("ControlLevel2 created")
+        console.log("📄 ControlLevel2 created")
+        console.log("📄 stackView:", root.stackView)
     }
 }

@@ -36,6 +36,27 @@ Page {
      */
     property StackView stackView: StackView.view
 
+    /**
+     * 打印状态数据
+     */
+    property string printState: "standby"
+    property real printProgress: 0.0
+    property string printFileName: ""
+
+    // ===== 数据绑定 =====
+    Connections {
+        target: app ? app.printer : null
+
+        function onPrinterStateChanged(state) {
+            root.printState = state
+        }
+
+        function onPrintProgressChanged(data) {
+            root.printProgress = data.progress || 0.0
+            root.printFileName = data.filename || ""
+        }
+    }
+
     // ===== 页面背景 =====
     background: Rectangle {
         color: Style.bgPrimary
@@ -48,13 +69,16 @@ Page {
         spacing: Style.spacingLarge
 
         // ===== 左侧：Widget 区域（60%） =====
-        Item {
+        Rectangle {
             Layout.fillHeight: true
-            Layout.preferredWidth: parent.width * 0.6
+            Layout.preferredWidth: 950
+            color: Style.bgSecondary
+            radius: Style.radiusSmall
 
             // 2x2 网格布局
             GridLayout {
                 anchors.fill: parent
+                anchors.margins: Style.spacingMedium
                 columns: 2
                 rows: 2
                 columnSpacing: Style.spacingMedium
@@ -64,8 +88,7 @@ Page {
                 TempWidget {
                     widgetId: "temp_hotend"
                     heaterName: "热端"
-                    currentTemp: 0.0  // TODO: Phase 4 - 绑定到真实数据
-                    targetTemp: 0.0
+                    heaterType: "extruder"
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                 }
@@ -74,8 +97,7 @@ Page {
                 TempWidget {
                     widgetId: "temp_bed"
                     heaterName: "热床"
-                    currentTemp: 0.0  // TODO: Phase 4 - 绑定到真实数据
-                    targetTemp: 0.0
+                    heaterType: "bed"
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                 }
@@ -100,60 +122,54 @@ Page {
             }
         }
 
-        // ===== 分隔线 =====
+        // ===== 分隔线（增强视觉效果）=====
         Rectangle {
             Layout.fillHeight: true
-            Layout.preferredWidth: Style.borderThin
-            color: Style.divider
+            Layout.preferredWidth: Style.borderMedium
+            color: Style.border
+
+            // 添加阴影效果
+            Rectangle {
+                anchors.left: parent.right
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                width: Style.borderThin
+                color: Qt.rgba(0, 0, 0, 0.1)
+            }
         }
 
         // ===== 右侧：功能区域（40%） =====
         Item {
             Layout.fillHeight: true
-            Layout.preferredWidth: parent.width * 0.4
+            Layout.fillWidth: true  // Fill remaining space
 
             ColumnLayout {
                 anchors.fill: parent
-                spacing: Style.spacingLarge
+                spacing: Style.spacingMedium
 
-                // 顶部：打印控制 Widget（占据约 40% 高度）
+                // ===== 上部区域（60%）：打印控制 =====
                 PrintControlWidget {
                     widgetId: "print_control"
-                    printState: "idle"  // TODO: Phase 6 - 绑定到真实数据
-                    progress: 0.0
-                    currentFileName: ""
                     Layout.fillWidth: true
-                    Layout.preferredHeight: parent.height * 0.4
+                    Layout.preferredHeight: parent.height * 0.6
                 }
 
-                // 分隔线
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: Style.borderThin
-                    color: Style.divider
-                }
-
-                // 底部：功能图标网格（占据约 60% 高度）
-                GridLayout {
+                // ===== 下部区域（40%）：4个图标横向排列 =====
+                RowLayout {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    columns: 3
-                    rows: 2
-                    columnSpacing: Style.spacingMedium
-                    rowSpacing: Style.spacingMedium
+                    spacing: Style.spacingMedium
 
                     // 功能图标 1: 设置
                     FunctionIcon {
                         iconId: "settings"
                         label: "设置"
-                        iconEmoji: "⚙️"
+                        iconName: "settings"
                         targetPage: "settings"
                         Layout.fillWidth: true
                         Layout.fillHeight: true
 
                         onIconClicked: (iconId, targetPage) => {
-                            console.log("FunctionIcon clicked:", targetPage)
-                            // 使用 ApplicationWindow 的 pageRegistry 导航
                             var appWindow = root.Window.window
                             if (appWindow && appWindow.pageRegistry) {
                                 appWindow.pageRegistry.navigateTo(targetPage)
@@ -161,18 +177,16 @@ Page {
                         }
                     }
 
-                    // 功能图标 2: 控制
+                    // 功能图标 2: 控制 (使用 fine-tune 图标，代表精细调整)
                     FunctionIcon {
                         iconId: "control"
                         label: "控制"
-                        iconEmoji: "🎮"
+                        iconName: "fine-tune"  // KlipperScreen 无 control.svg，使用 fine-tune.svg
                         targetPage: "control"
                         Layout.fillWidth: true
                         Layout.fillHeight: true
 
                         onIconClicked: (iconId, targetPage) => {
-                            console.log("FunctionIcon clicked:", targetPage)
-                            // 使用 ApplicationWindow 的 pageRegistry 导航
                             var appWindow = root.Window.window
                             if (appWindow && appWindow.pageRegistry) {
                                 appWindow.pageRegistry.navigateTo(targetPage)
@@ -180,56 +194,38 @@ Page {
                         }
                     }
 
-                    // 功能图标 3: 文件
+                    // 功能图标 3: 移动 (XYZ轴移动)
+                    FunctionIcon {
+                        iconId: "move"
+                        label: "移动"
+                        iconName: "move"
+                        targetPage: "move"
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+
+                        onIconClicked: (iconId, targetPage) => {
+                            var appWindow = root.Window.window
+                            if (appWindow && appWindow.pageRegistry) {
+                                appWindow.pageRegistry.navigateTo(targetPage)
+                            }
+                        }
+                    }
+
+                    // 功能图标 4: 文件
                     FunctionIcon {
                         iconId: "files"
                         label: "文件"
-                        iconEmoji: "📁"
+                        iconName: "files"
                         targetPage: "files"
                         Layout.fillWidth: true
                         Layout.fillHeight: true
 
                         onIconClicked: (iconId, targetPage) => {
-                            console.log("FunctionIcon clicked:", targetPage)
-                            // 使用 ApplicationWindow 的 pageRegistry 导航
                             var appWindow = root.Window.window
                             if (appWindow && appWindow.pageRegistry) {
                                 appWindow.pageRegistry.navigateTo(targetPage)
                             }
                         }
-                    }
-
-                    // 功能图标 4: AFC（暂时禁用）
-                    FunctionIcon {
-                        iconId: "afc"
-                        label: "AFC"
-                        iconEmoji: "🔄"
-                        targetPage: "afc"
-                        enabled: false  // 未来功能
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                    }
-
-                    // 功能图标 5: 移动
-                    FunctionIcon {
-                        iconId: "move"
-                        label: "移动"
-                        iconEmoji: "🧭"
-                        targetPage: "move"
-                        enabled: false  // 未来功能
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                    }
-
-                    // 功能图标 6: 更多
-                    FunctionIcon {
-                        iconId: "more"
-                        label: "更多"
-                        iconEmoji: "⋯"
-                        targetPage: "more"
-                        enabled: false  // 未来功能
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
                     }
                 }
             }

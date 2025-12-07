@@ -29,6 +29,8 @@ class MoonrakerClient(QObject):
     messageReceived = Signal(str, str)  # method, data
     fileListReceived = Signal(str)  # JSON string of file list
     fileMetadataReceived = Signal(str, str)  # filename, metadata JSON string
+    fanStateChanged = Signal(str, bool, float)  # fan_name, is_on, speed (0.0-1.0)
+    ledStateChanged = Signal(str, bool, float)  # led_name, is_on, brightness (0.0-1.0)
 
     # 错误和通知信号
     klipperError = Signal(str)  # Klipper错误消息 (用于全屏错误显示)
@@ -81,6 +83,14 @@ class MoonrakerClient(QObject):
         self._position_y = 0.0
         self._position_z = 0.0
         self._homed_axes = ""  # 已归零的轴: "xyz" 或 "xy" 等
+
+        # 风扇状态
+        self._fan_speed = 0.0  # 打印冷却风扇速度 (0.0-1.0)
+        self._fan_on = False
+
+        # LED 状态
+        self._led_brightness = 0.0  # LED 亮度 (0.0-1.0)
+        self._led_on = False
 
         # 性能优化：进度更新节流
         self._last_progress_update_time = 0.0  # 上次进度更新时间戳
@@ -272,6 +282,68 @@ class MoonrakerClient(QObject):
             self.logger.info(f"设置热床温度: {temp}°C")
         except Exception as e:
             self.logger.error(f"设置温度失败: {e}")
+
+    @Slot(str, bool)
+    def setFanOnOff(self, fan_name: str, on: bool):
+        """设置风扇开关"""
+        try:
+            if on:
+                # 开启风扇（默认全速）
+                gcode = "M106 S255"
+            else:
+                # 关闭风扇
+                gcode = "M107"
+            self._send_gcode(gcode)
+            self._fan_on = on
+            if not on:
+                self._fan_speed = 0.0
+            self.logger.info(f"设置风扇 {fan_name}: {'开启' if on else '关闭'}")
+        except Exception as e:
+            self.logger.error(f"设置风扇失败: {e}")
+
+    @Slot(str, float)
+    def setFanSpeed(self, fan_name: str, speed: float):
+        """设置风扇速度 (0.0-1.0)"""
+        try:
+            # M106 S[0-255]
+            pwm_value = int(speed * 255)
+            gcode = f"M106 S{pwm_value}"
+            self._send_gcode(gcode)
+            self._fan_speed = speed
+            self._fan_on = speed > 0
+            self.logger.info(f"设置风扇 {fan_name} 速度: {speed * 100:.0f}%")
+        except Exception as e:
+            self.logger.error(f"设置风扇速度失败: {e}")
+
+    @Slot(str, bool)
+    def setLedOnOff(self, led_name: str, on: bool):
+        """设置 LED 开关"""
+        try:
+            if on:
+                # 开启 LED（全亮度）
+                gcode = f"SET_LED LED={led_name} WHITE=1"
+            else:
+                # 关闭 LED
+                gcode = f"SET_LED LED={led_name} WHITE=0"
+            self._send_gcode(gcode)
+            self._led_on = on
+            if not on:
+                self._led_brightness = 0.0
+            self.logger.info(f"设置 LED {led_name}: {'开启' if on else '关闭'}")
+        except Exception as e:
+            self.logger.error(f"设置 LED 失败: {e}")
+
+    @Slot(str, float)
+    def setLedBrightness(self, led_name: str, brightness: float):
+        """设置 LED 亮度 (0.0-1.0)"""
+        try:
+            gcode = f"SET_LED LED={led_name} WHITE={brightness:.2f}"
+            self._send_gcode(gcode)
+            self._led_brightness = brightness
+            self._led_on = brightness > 0
+            self.logger.info(f"设置 LED {led_name} 亮度: {brightness * 100:.0f}%")
+        except Exception as e:
+            self.logger.error(f"设置 LED 亮度失败: {e}")
 
     @Slot()
     def pausePrint(self):
@@ -881,6 +953,39 @@ class MoonrakerClient(QObject):
                 'homed_axes': self._homed_axes
             }
             self.positionUpdated.emit(position_data)
+
+        # 风扇状态 (fan) - 性能优化：变化 >= 5% 才更新
+        fan_updated = False
+        if 'fan' in status:
+            fan = status['fan']
+            if 'speed' in fan:
+                new_speed = round(fan['speed'], 2)
+                if abs(new_speed - self._fan_speed) >= 0.05:
+                    self._fan_speed = new_speed
+                    self._fan_on = new_speed > 0
+                    fan_updated = True
+
+        if fan_updated:
+            self.fanStateChanged.emit("fan", self._fan_on, self._fan_speed)
+
+        # LED 状态 (output_pin) - 从 Klipper 的 output_pin 获取
+        # 注意：LED 名称可能是 "caselight", "led_strip" 等
+        # 这里假设使用 "output_pin led" 或类似配置
+        # 性能优化：变化 >= 5% 才更新
+        led_updated = False
+        for key in status:
+            if key.startswith('output_pin'):
+                led_data = status[key]
+                if 'value' in led_data:
+                    new_brightness = round(led_data['value'], 2)
+                    if abs(new_brightness - self._led_brightness) >= 0.05:
+                        self._led_brightness = new_brightness
+                        self._led_on = new_brightness > 0
+                        led_updated = True
+                        break
+
+        if led_updated:
+            self.ledStateChanged.emit("led", self._led_on, self._led_brightness)
 
         # 发送打印统计更新信号
         if stats_updated:
