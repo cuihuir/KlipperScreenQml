@@ -365,21 +365,21 @@
 
 ### 任务
 
-- [ ] T043 [P] 实现 Widget 数据节流 in `backend/moonraker_client.py`
+- [x] T043 [P] 实现 Widget 数据节流 in `backend/moonraker_client.py`
   - 温度更新：变化 >= 0.5°C 才发射信号
   - 进度更新：时间间隔 >= 1 秒才发射信号
   - 风扇/LED 更新：变化 >= 0.05 (5%) 才发射信号
-- [ ] T044 [P] 添加导航错误处理 in `qml/MainWindow.qml`
+- [x] T044 [P] 添加导航错误处理 in `qml/MainWindow.qml`
   - 在 `pageRegistry.navigateTo()` 中添加 try-catch
   - 页面加载失败时显示错误提示（Toast）
   - 导航栈损坏时自动重置到主页
-- [ ] T045 [P] 处理键盘弹出时的导航冲突
+- [x] T045 [P] 处理键盘弹出时的导航冲突
   - 在 TempWidget 的 Popup 中添加 `onVisibleChanged`
   - 如果键盘可见时用户点击 HOME，先关闭键盘再导航
-- [ ] T046 [P] 添加 Widget 加载状态反馈
+- [x] T046 [P] 添加 Widget 加载状态反馈
   - 在 HomeWidget 中实现 `widgetState = "updating"` 时的动画
   - 添加 Metro 点阵式加载指示器（3 个圆点交替闪烁）
-- [ ] T047 实现性能监控和优化验证
+- [x] T047 实现性能监控和优化验证
   - 测试导航切换时间 < 300ms
   - 测试 Widget 更新延迟 < 500ms
   - 测试 UI 帧率保持 60 FPS
