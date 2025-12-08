@@ -228,6 +228,41 @@ ApplicationWindow {
         }
     }
 
+    Component {
+        id: finetunePageComponent
+        Pages.FineTunePage {
+            printer: root.printer
+        }
+    }
+
+    Component {
+        id: temperaturePageComponent
+        Pages.TemperaturePage {
+            printer: root.printer
+        }
+    }
+
+    Component {
+        id: bedLevelPageComponent
+        Pages.BedLevelPage {
+            printer: root.printer
+        }
+    }
+
+    Component {
+        id: zcalibratePageComponent
+        Pages.ZCalibratePage {
+            printer: root.printer
+        }
+    }
+
+    Component {
+        id: extrudePageComponent
+        Pages.ExtrudePage {
+            printer: root.printer
+        }
+    }
+
     // ===== 页面注册表（T016 - 实现页面路由） =====
 
     QtObject {
@@ -242,7 +277,12 @@ ApplicationWindow {
             "printing": printingPageComponent,
             "job_status": jobStatusPageComponent,
             "screensaver": screensaverPageComponent,
-            "move": movePageComponent
+            "move": movePageComponent,
+            "fine_tune": finetunePageComponent,
+            "temperature": temperaturePageComponent,
+            "bed_level": bedLevelPageComponent,
+            "zcalibrate": zcalibratePageComponent,
+            "extrude": extrudePageComponent
         })
 
         /**

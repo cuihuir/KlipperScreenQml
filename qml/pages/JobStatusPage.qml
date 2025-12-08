@@ -688,8 +688,7 @@ Page {
         console.log("Navigate to fine tune")
         var appWindow = root.Window.window
         if (appWindow && appWindow.pageRegistry) {
-            // TODO: 等 fine_tune 页面实现后再添加
-            console.warn("FineTunePage not implemented yet")
+            appWindow.pageRegistry.navigateTo("fine_tune")
         }
     }
 

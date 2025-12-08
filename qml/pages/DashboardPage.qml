@@ -138,11 +138,11 @@ Page {
                                     border.width: Style.borderThin
                                     border.color: Style.divider
 
-                                    Label {
+                                    ThemedIcon {
                                         anchors.centerIn: parent
-                                        text: "▲"
-                                        font.pixelSize: Style.fontSmall
-                                        color: errorScrollView.ScrollBar.vertical.position > 0 ? Style.bgPrimary : Style.textDisabled
+                                        iconName: "arrow-up"
+                                        iconSize: Style.fontSmall
+                                        opacity: errorScrollView.ScrollBar.vertical.position > 0 ? 1.0 : 0.3
                                     }
 
                                     MouseArea {
@@ -162,11 +162,11 @@ Page {
                                     border.width: Style.borderThin
                                     border.color: Style.divider
 
-                                    Label {
+                                    ThemedIcon {
                                         anchors.centerIn: parent
-                                        text: "▼"
-                                        font.pixelSize: Style.fontSmall
-                                        color: (errorScrollView.ScrollBar.vertical.position + errorScrollView.ScrollBar.vertical.size) < 1.0 ? Style.bgPrimary : Style.textDisabled
+                                        iconName: "arrow-down"
+                                        iconSize: Style.fontSmall
+                                        opacity: (errorScrollView.ScrollBar.vertical.position + errorScrollView.ScrollBar.vertical.size) < 1.0 ? 1.0 : 0.3
                                     }
 
                                     MouseArea {

@@ -83,10 +83,10 @@ Page {
 
                     Item { Layout.fillWidth: true }
 
-                    Label {
-                        text: "▼"
-                        font.pixelSize: Style.fontSmall
-                        color: Style.textSecondary
+                    ThemedIcon {
+                        iconName: "arrow-down"
+                        iconSize: Style.fontSmall
+                        opacity: 0.6
                     }
                 }
 
@@ -191,10 +191,10 @@ Page {
 
                     Item { Layout.fillWidth: true }
 
-                    Label {
-                        text: "▼"
-                        font.pixelSize: Style.fontSmall
-                        color: Style.textSecondary
+                    ThemedIcon {
+                        iconName: "arrow-down"
+                        iconSize: Style.fontSmall
+                        opacity: 0.6
                     }
                 }
 

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import ".."
+import "../components"
 
 // Metro风格文件页 - 2行4列大图标网格布局
 Page {
@@ -157,12 +158,10 @@ Page {
                     border.color: Style.divider
 
                     // 旋转动画图标
-                    Label {
+                    ThemedIcon {
                         anchors.centerIn: parent
-                        text: "⟳"
-                        font.pixelSize: Style.fontXLarge
-                        font.bold: true
-                        color: Style.bgPrimary
+                        iconName: "refresh"
+                        iconSize: Style.fontXLarge
                         visible: isLoading
 
                         RotationAnimation on rotation {
@@ -297,11 +296,11 @@ Page {
                                         cache: false
 
                                         // 占位符图标
-                                        Label {
+                                        ThemedIcon {
                                             anchors.centerIn: parent
-                                            text: "⬛"
-                                            font.pixelSize: Style.baseUnit * 4
-                                            color: Style.accent
+                                            iconName: "files"
+                                            iconSize: Style.baseUnit * 4
+                                            opacity: 0.3
                                             visible: parent.status !== Image.Ready || model.thumbnail === ""
                                         }
                                     }
@@ -388,12 +387,11 @@ Page {
                     anchors.centerIn: parent
                     spacing: Style.spacingSmall
 
-                    Label {
+                    ThemedIcon {
                         Layout.alignment: Qt.AlignHCenter
-                        text: "◀"
-                        font.pixelSize: Style.baseUnit * 5
-                        font.bold: true
-                        color: currentPage > 0 ? Style.bgPrimary : Style.textDisabled
+                        iconName: "arrow-left"
+                        iconSize: Style.baseUnit * 5
+                        opacity: currentPage > 0 ? 1.0 : 0.3
                     }
 
                     Label {
@@ -460,12 +458,11 @@ Page {
                         color: currentPage < totalPages - 1 ? Style.bgPrimary : Style.textDisabled
                     }
 
-                    Label {
+                    ThemedIcon {
                         Layout.alignment: Qt.AlignHCenter
-                        text: "▶"
-                        font.pixelSize: Style.baseUnit * 5
-                        font.bold: true
-                        color: currentPage < totalPages - 1 ? Style.bgPrimary : Style.textDisabled
+                        iconName: "arrow-right"
+                        iconSize: Style.baseUnit * 5
+                        opacity: currentPage < totalPages - 1 ? 1.0 : 0.3
                     }
                 }
 
