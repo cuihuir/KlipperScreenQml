@@ -160,7 +160,39 @@ Page {
                     Layout.fillHeight: true
                     spacing: Style.spacingMedium
 
-                    // 功能图标 1: 设置
+                    // 功能图标 1: 控制 (原 move 功能)
+                    FunctionIcon {
+                        iconId: "control"
+                        label: "控制"
+                        iconName: "move"  // 使用 move 图标
+                        targetPage: "control"
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+
+                        onIconClicked: (iconId, targetPage) => {
+                            var appWindow = root.Window.window
+                            if (appWindow && appWindow.pageRegistry) {
+                                appWindow.pageRegistry.navigateTo(targetPage)
+                            }
+                        }
+                    }
+
+                    // 功能图标 2: 校准 (占位)
+                    FunctionIcon {
+                        iconId: "calibrate"
+                        label: "校准"
+                        iconName: "bed-level"  // 使用床调平图标
+                        targetPage: ""  // 占位,暂无目标页面
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+
+                        onIconClicked: (iconId, targetPage) => {
+                            console.log("校准功能待实现")
+                            // 占位功能,暂不跳转
+                        }
+                    }
+
+                    // 功能图标 3: 设置
                     FunctionIcon {
                         iconId: "settings"
                         label: "设置"
@@ -177,54 +209,18 @@ Page {
                         }
                     }
 
-                    // 功能图标 2: 控制 (使用 fine-tune 图标，代表精细调整)
+                    // 功能图标 4: 更多 (占位)
                     FunctionIcon {
-                        iconId: "control"
-                        label: "控制"
-                        iconName: "fine-tune"  // KlipperScreen 无 control.svg，使用 fine-tune.svg
-                        targetPage: "control"
+                        iconId: "more"
+                        label: "更多"
+                        iconName: "settings"  // 临时使用 settings 图标
+                        targetPage: ""  // 占位,暂无目标页面
                         Layout.fillWidth: true
                         Layout.fillHeight: true
 
                         onIconClicked: (iconId, targetPage) => {
-                            var appWindow = root.Window.window
-                            if (appWindow && appWindow.pageRegistry) {
-                                appWindow.pageRegistry.navigateTo(targetPage)
-                            }
-                        }
-                    }
-
-                    // 功能图标 3: 移动 (XYZ轴移动)
-                    FunctionIcon {
-                        iconId: "move"
-                        label: "移动"
-                        iconName: "move"
-                        targetPage: "move"
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-
-                        onIconClicked: (iconId, targetPage) => {
-                            var appWindow = root.Window.window
-                            if (appWindow && appWindow.pageRegistry) {
-                                appWindow.pageRegistry.navigateTo(targetPage)
-                            }
-                        }
-                    }
-
-                    // 功能图标 4: 文件
-                    FunctionIcon {
-                        iconId: "files"
-                        label: "文件"
-                        iconName: "files"
-                        targetPage: "files"
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-
-                        onIconClicked: (iconId, targetPage) => {
-                            var appWindow = root.Window.window
-                            if (appWindow && appWindow.pageRegistry) {
-                                appWindow.pageRegistry.navigateTo(targetPage)
-                            }
+                            console.log("更多功能待实现")
+                            // 占位功能,暂不跳转
                         }
                     }
                 }

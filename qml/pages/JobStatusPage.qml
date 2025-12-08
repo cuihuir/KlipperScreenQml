@@ -658,20 +658,20 @@ Page {
     function pausePrint() {
         if (!printer) return
         console.log("暂停打印")
-        ApiClient.post("/printer/print/pause", {})
+        printer.pausePrint()
     }
 
     function resumePrint() {
         if (!printer) return
         console.log("继续打印")
-        ApiClient.post("/printer/print/resume", {})
+        printer.resumePrint()
     }
 
     function cancelPrint() {
         if (!printer) return
         console.log("取消打印")
         currentState = "cancelling"
-        ApiClient.post("/printer/print/cancel", {})
+        printer.cancelPrint()
     }
 
     function restartPrint() {
@@ -685,18 +685,28 @@ Page {
     }
 
     function navigateToFineTune() {
-        // TODO: Navigate to fine tune page
         console.log("Navigate to fine tune")
+        var appWindow = root.Window.window
+        if (appWindow && appWindow.pageRegistry) {
+            // TODO: 等 fine_tune 页面实现后再添加
+            console.warn("FineTunePage not implemented yet")
+        }
     }
 
     function navigateToControl() {
-        // TODO: Navigate to control page
         console.log("Navigate to control")
+        var appWindow = root.Window.window
+        if (appWindow && appWindow.pageRegistry) {
+            appWindow.pageRegistry.navigateTo("control")
+        }
     }
 
     function navigateToMenu() {
-        // TODO: Navigate to main menu
         console.log("Navigate to menu")
+        var appWindow = root.Window.window
+        if (appWindow && appWindow.pageRegistry) {
+            appWindow.pageRegistry.goBack()
+        }
     }
 
     function showFullscreenThumbnail() {

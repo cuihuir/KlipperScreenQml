@@ -168,12 +168,13 @@ ApplicationWindow {
         }
     }
 
-    Component {
-        id: controlPageComponent
-        Pages.ControlPage {
-            printer: root.printer
-        }
-    }
+    // ControlPage 已合并到 MovePage
+    // Component {
+    //     id: controlPageComponent
+    //     Pages.ControlPage {
+    //         printer: root.printer
+    //     }
+    // }
 
     Component {
         id: filesPageComponent
@@ -220,6 +221,13 @@ ApplicationWindow {
         }
     }
 
+    Component {
+        id: movePageComponent
+        Pages.MovePage {
+            printer: root.printer
+        }
+    }
+
     // ===== 页面注册表（T016 - 实现页面路由） =====
 
     QtObject {
@@ -228,12 +236,13 @@ ApplicationWindow {
         // 页面组件映射表
         readonly property var pages: ({
             "home": homePageComponent,
-            "control": controlPageComponent,
+            "control": movePageComponent,  // control 路由指向 MovePage
             "files": filesPageComponent,
             "settings": settingsPageComponent,
             "printing": printingPageComponent,
             "job_status": jobStatusPageComponent,
-            "screensaver": screensaverPageComponent
+            "screensaver": screensaverPageComponent,
+            "move": movePageComponent
         })
 
         /**

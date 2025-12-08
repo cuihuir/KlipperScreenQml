@@ -258,12 +258,11 @@ Page {
                 border.color: Style.divider
                 opacity: xHomed ? 1.0 : 0.5
 
-                Label {
+                Components.ThemedIcon {
                     anchors.centerIn: parent
-                    text: "←"
-                    font.pixelSize: Style.fontXXLarge
-                    font.bold: true
-                    color: xHomed ? Style.bgPrimary : Style.textDisabled
+                    iconName: "arrow-left"
+                    iconSize: Style.fontXXLarge
+                    opacity: xHomed ? 1.0 : 0.3
                 }
 
                 MouseArea {
@@ -306,12 +305,11 @@ Page {
                 border.color: Style.divider
                 opacity: xHomed ? 1.0 : 0.5
 
-                Label {
+                Components.ThemedIcon {
                     anchors.centerIn: parent
-                    text: "→"
-                    font.pixelSize: Style.fontXXLarge
-                    font.bold: true
-                    color: xHomed ? Style.bgPrimary : Style.textDisabled
+                    iconName: "arrow-right"
+                    iconSize: Style.fontXXLarge
+                    opacity: xHomed ? 1.0 : 0.3
                 }
 
                 MouseArea {
