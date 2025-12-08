@@ -174,22 +174,22 @@
 
 ### 任务
 
-- [ ] T021 [US2] 扩展 MoonrakerClient 添加温度设置方法 in `backend/moonraker_client.py`
+- [x] T021 [US2] 扩展 MoonrakerClient 添加温度设置方法 in `backend/moonraker_client.py`
   - 添加 `@Slot(str, int) def setExtruderTemp(heater_name, target_temp)`
   - 发送 `SET_HEATER_TEMPERATURE` G-code 命令
   - 确保 `temperatureUpdated` 信号已存在（可能已有）
-- [ ] T022 [US2] 实现完整的 TempWidget in `qml/components/TempWidget.qml`
+- [x] T022 [US2] 实现完整的 TempWidget in `qml/components/TempWidget.qml`
   - 添加 `Connections { target: printer; onTemperatureUpdated }` 绑定数据
   - 显示当前温度（大号字体）和目标温度（小号字体）
   - 添加 `SmoothedAnimation` 实现温度平滑变化
   - 实现 `MouseArea.onClicked: showKeypad()`
-- [ ] T023 [US2] 创建温度键盘弹出层 in `qml/components/TempWidget.qml`
+- [x] T023 [US2] 创建温度键盘弹出层 in `qml/components/TempWidget.qml`
   - 使用 `Popup { modal: false; dim: true }` 包装 NumericKeypad
   - 配置 `enter/exit` 转场动画（200ms, OutBack）
   - 实现 `onConfirmed`: 调用 `printer.setExtruderTemp()` 并关闭 Popup
   - 实现 `onCancelled`: 直接关闭 Popup
   - 处理点击背景关闭（`closePolicy: Popup.CloseOnPressOutside`）
-- [ ] T024 [US2] 测试温度控制流程
+- [x] T024 [US2] 测试温度控制流程
   - 验证温度数据从 Moonraker 实时更新
   - 验证点击 Widget 弹出键盘
   - 验证输入 220 并确定后，温度目标值更新
@@ -211,25 +211,25 @@
 
 ### 任务
 
-- [ ] T025 [P] [US3] 扩展 MoonrakerClient 添加风扇控制方法 in `backend/moonraker_client.py`
+- [x] T025 [P] [US3] 扩展 MoonrakerClient 添加风扇控制方法 in `backend/moonraker_client.py`
   - 添加 `@Slot(str, bool) def setFanOnOff(fan_name, on)`
   - 添加 `@Slot(str, float) def setFanSpeed(fan_name, speed)`
   - 发送 `SET_FAN_SPEED` G-code 命令
   - 添加 `fanStateChanged = Signal(str, bool, float)` 信号
   - 在 `_update_from_status()` 中解析风扇状态并发射信号
-- [ ] T026 [P] [US3] 扩展 MoonrakerClient 添加 LED 控制方法 in `backend/moonraker_client.py`
+- [x] T026 [P] [US3] 扩展 MoonrakerClient 添加 LED 控制方法 in `backend/moonraker_client.py`
   - 添加 `@Slot(str, bool) def setLedOnOff(led_name, on)`
   - 添加 `@Slot(str, float) def setLedBrightness(led_name, brightness)`
   - 发送 `SET_LED` G-code 命令
   - 添加 `ledStateChanged = Signal(str, bool, float)` 信号
   - 在 `_update_from_status()` 中解析 LED 状态并发射信号
-- [ ] T027 [US3] 实现完整的 FanWidget in `qml/components/FanWidget.qml`
+- [x] T027 [US3] 实现完整的 FanWidget in `qml/components/FanWidget.qml`
   - 添加 `Connections { target: printer; onFanStateChanged }` 绑定数据
   - 添加 `Slider` 组件控制速度（0.0-1.0）
   - 添加开关按钮调用 `printer.setFanOnOff()`
   - 在滑块释放时调用 `printer.setFanSpeed()`
   - 显示当前速度百分比（Math.round(speed * 100) + "%"）
-- [ ] T028 [US3] 实现完整的 LedWidget in `qml/components/LedWidget.qml`
+- [x] T028 [US3] 实现完整的 LedWidget in `qml/components/LedWidget.qml`
   - 结构与 FanWidget 类似
   - 绑定 `ledStateChanged` 信号
   - 调用 `printer.setLedOnOff()` 和 `printer.setLedBrightness()`
@@ -258,42 +258,42 @@
 
 ### 任务
 
-- [ ] T029 [US4] [US5] 在 MoonrakerClient 中确认打印控制方法存在
+- [x] T029 [US4] [US5] 在 MoonrakerClient 中确认打印控制方法存在
   - 验证 `startPrint()`, `pausePrint()`, `resumePrint()`, `cancelPrint()` 方法
   - 验证 `printStateChanged`, `printProgressChanged` 信号
   - 如缺失，添加相应方法和信号
-- [ ] T030 [US4] 实现 PrintControlWidget 的 idle 状态组件 in `qml/components/PrintControlWidget.qml`
+- [x] T030 [US4] 实现 PrintControlWidget 的 idle 状态组件 in `qml/components/PrintControlWidget.qml`
   - 创建 `Component { id: idleComponent }`
   - 显示超大 MetroButton："开始打印"（100px 高度）
   - `onClicked: pageRegistry.navigateTo("files", { "mode": "select" })`
-- [ ] T031 [P] [US5] 实现 PrintControlWidget 的 printing 状态组件
+- [x] T031 [P] [US5] 实现 PrintControlWidget 的 printing 状态组件
   - 创建 `Component { id: printingComponent }`
   - 显示文件名、进度条、进度百分比、图层信息、剩余时间
   - 添加背景 `MouseArea { z: 0; onClicked: pageRegistry.navigateTo("printing") }`
   - 添加暂停/继续按钮（`z: 10`，调用 `printer.pausePrint()/resumePrint()`）
   - 添加取消按钮（`z: 10`，调用 `printer.cancelPrint()`）
   - 确保按钮区域阻止事件传播（`mouse.accepted = true`）
-- [ ] T032 [P] [US5] 实现 PrintControlWidget 的 complete 状态组件
+- [x] T032 [P] [US5] 实现 PrintControlWidget 的 complete 状态组件
   - 创建 `Component { id: completeComponent }`
   - 显示 "✓ 打印完成" 消息和文件名
   - 添加 `Timer { interval: 3000; running: true; onTriggered: printState = "idle" }`
-- [ ] T033 [P] [US5] 实现 PrintControlWidget 的 error 状态组件
+- [x] T033 [P] [US5] 实现 PrintControlWidget 的 error 状态组件
   - 创建 `Component { id: errorComponent }`
   - 显示 "⚠ 打印错误" 消息
   - 添加"重试"按钮（调用 `printer.startPrint(fileName)`）
   - 添加"取消"按钮（设置 `printState = "idle"`）
-- [ ] T034 [US5] 实现 PrintControlWidget 的状态机 in `qml/components/PrintControlWidget.qml`
+- [x] T034 [US5] 实现 PrintControlWidget 的状态机 in `qml/components/PrintControlWidget.qml`
   - 添加 `Connections { target: printer; onPrintStateChanged; onPrintProgressChanged }`
   - 使用 `Loader` 根据 `printState` 加载对应组件：
     - `idle` → `idleComponent`
     - `printing` / `paused` → `printingComponent`
     - `complete` → `completeComponent`
     - `error` → `errorComponent`
-- [ ] T035 [US5] 创建取消打印确认对话框 in `qml/components/ConfirmDialog.qml`（如不存在）
+- [x] T035 [US5] 创建取消打印确认对话框 in `qml/components/ConfirmDialog.qml`（如不存在）
   - 显示 "确定要取消当前打印吗？"
   - 提供 "确定" 和 "取消" 按钮
   - 发射 `accepted()` 和 `rejected()` 信号
-- [ ] T036 [US4] [US5] 测试打印控制流程
+- [x] T036 [US4] [US5] 测试打印控制流程
   - 验证待机时显示开始按钮
   - 模拟打印开始，验证切换为进度卡片
   - 验证暂停/继续/取消按钮功能
