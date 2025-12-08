@@ -344,15 +344,15 @@
 
 ### 任务
 
-- [ ] T040 [US8] 调整 HomePage 布局的视觉分隔 in `qml/pages/HomePage.qml`
+- [x] T040 [US8] 调整 HomePage 布局的视觉分隔 in `qml/pages/HomePage.qml`
   - 在 Widget 区域添加背景色（`Style.bgSecondary`）
   - 在图标区域添加不同的背景色（`Style.bgPrimary`）
   - 或在两区域间添加分隔线（`Rectangle { width: 2; color: Style.border }`）
-- [ ] T041 [US8] 优化 Widget 卡片样式 in `qml/components/HomeWidget.qml`
+- [x] T041 [US8] 优化 Widget 卡片样式 in `qml/components/HomeWidget.qml`
   - 确保 `radius: Style.radiusSmall`（4px）
   - 添加 `border.width: 1; border.color: Style.border`（可选）
   - 调整内边距（`anchors.margins: Style.spacingNormal`）
-- [ ] T042 [US8] 优化图标网格间距 in `qml/pages/HomePage.qml`
+- [x] T042 [US8] 优化图标网格间距 in `qml/pages/HomePage.qml`
   - 设置 `GridLayout { rowSpacing: Style.spacingLarge; columnSpacing: Style.spacingLarge }`
   - 确保图标大小统一（120x120px）
   - 验证触摸目标符合 44px 最小标准
