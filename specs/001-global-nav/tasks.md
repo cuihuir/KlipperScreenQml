@@ -316,14 +316,14 @@
 
 ### 任务
 
-- [ ] T037 [P] [US6] 为所有功能图标配置 targetPage 属性 in `qml/pages/HomePage.qml`
+- [x] T037 [P] [US6] 为所有功能图标配置 targetPage 属性 in `qml/pages/HomePage.qml`
   - 设置、控制、文件、AFC、移动、更多 图标的 `targetPage` 属性
   - 确保 `iconPath` 指向正确的图标文件（或占位符）
-- [ ] T038 [US6] 验证现有功能页面适配全局按钮布局
+- [x] T038 [US6] 验证现有功能页面适配全局按钮布局
   - 检查 SettingsPage, ControlPage, FilesPage 的布局
   - 确保内容区域不会延伸到左侧 80px 全局按钮区域
   - 如有必要，调整 `anchors` 或 `margins`
-- [ ] T039 [US6] 测试功能图标导航流程
+- [x] T039 [US6] 测试功能图标导航流程
   - 从主页点击每个功能图标
   - 验证进入对应功能页
   - 验证全局按钮始终可见且可操作
