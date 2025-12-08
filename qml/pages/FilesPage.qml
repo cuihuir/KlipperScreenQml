@@ -24,7 +24,6 @@ Page {
     property bool isLoadingMetadata: false
 
     signal showError(string message)
-    signal navigateToDashboard()  // 开始打印后跳转到首页
 
     background: Rectangle {
         color: Style.bgPrimary
@@ -1163,10 +1162,12 @@ Page {
         printer.startPrint(filename)
         selectedFile = ""  // 清除选中状态
 
-        // 开始打印后自动跳转到首页
-        console.log("=== Emitting navigateToDashboard signal")
-        navigateToDashboard()
-        console.log("=== navigateToDashboard signal emitted")
+        // 开始打印后自动跳转到打印状态页
+        console.log("=== Navigating to JobStatusPage")
+        var appWindow = root.Window.window
+        if (appWindow && appWindow.pageRegistry) {
+            appWindow.pageRegistry.navigateTo("job_status")
+        }
     }
 
     function deleteFile(filename) {
