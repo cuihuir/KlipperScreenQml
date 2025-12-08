@@ -1,6 +1,6 @@
 {
   "printer": {
-    "host": "192.168.31.65",
+    "host": "192.168.200.69",
     "port": 7125,
     "name": "My 3D Printer"
   },
@@ -11,7 +11,7 @@
     "height": 600
   },
   "theme": {
-    "selected_theme": "material-dark",
+    "selected_theme": "z-bolt",
     "theme_dir": "KlipperScreen/styles",
     "fallback_theme": "base",
     "custom_icons_enabled": false,
