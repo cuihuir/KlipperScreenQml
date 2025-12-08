@@ -1,9 +1,8 @@
-// Job Status Page - Print Status Detail
-// 打印状态详情页
+// Job Status Page - Print Status Detail (Optimized Layout)
+// 打印状态详情页 - 优化纵向布局
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Controls.Material
 import ".."
 import "../components" as Components
 
@@ -14,6 +13,7 @@ Page {
     property string currentState: "standby"  // printing, paused, complete, cancelled, error, standby
     property string currentFilename: ""
     property real currentProgress: 0.0
+    property string thumbnailUrl: ""
 
     // Data cache
     property real printDuration: 0.0
@@ -29,6 +29,12 @@ Page {
     property real fanSpeed: 0.0
     property real flowrate: 0.0
 
+    // Temperature data
+    property real extruderTemp: 0.0
+    property real extruderTarget: 0.0
+    property real bedTemp: 0.0
+    property real bedTarget: 0.0
+
     background: Rectangle {
         color: Style.bgPrimary
     }
@@ -39,53 +45,40 @@ Page {
 
         // Print stats update
         function onPrintStatsUpdated(stats) {
-            console.log("JobStatusPage: printStatsUpdated", typeof stats, stats)
             var data = (typeof stats === 'string') ? JSON.parse(stats) : stats
             if (data.state) {
                 updatePrintState(data.state)
             }
             if (data.filename) {
                 currentFilename = data.filename
-                filenameLabel.text = data.filename
             }
             if (data.print_duration !== undefined) {
                 printDuration = data.print_duration
-                elapsedLabel.text = formatTime(printDuration)
             }
             if (data.filament_used !== undefined) {
                 filamentUsed = data.filament_used
-                filamentUsedLabel.text = (filamentUsed / 1000).toFixed(1) + " m"
             }
             if (data.info) {
                 if (data.info.current_layer !== undefined) currentLayer = data.info.current_layer
                 if (data.info.total_layer !== undefined) totalLayers = data.info.total_layer
-                layerLabel.text = currentLayer + " / " + totalLayers
             }
         }
 
         // Print progress update
         function onPrintProgressChanged(progress) {
-            console.log("JobStatusPage: printProgressChanged", typeof progress, progress)
             var data = (typeof progress === 'string') ? JSON.parse(progress) : progress
             if (data.progress !== undefined) {
                 currentProgress = data.progress
-                circularProgress.progress = currentProgress
-                console.log("Updated progress to:", currentProgress)
             }
         }
 
         // Temperature update
         function onTemperatureUpdated(temps) {
             var data = (typeof temps === 'string') ? JSON.parse(temps) : temps
-            // Update temperature buttons for all heaters
-            for (var key in data) {
-                if (data.hasOwnProperty(key)) {
-                    var temp = data[key]
-                    if (temp.temperature !== undefined && temp.target !== undefined) {
-                        updateTemperatureButton(key, temp.temperature, temp.target, temp.power || 0)
-                    }
-                }
-            }
+            if (data.extruder_temp !== undefined) extruderTemp = data.extruder_temp
+            if (data.extruder_target !== undefined) extruderTarget = data.extruder_target
+            if (data.bed_temp !== undefined) bedTemp = data.bed_temp
+            if (data.bed_target !== undefined) bedTarget = data.bed_target
         }
 
         // Position update
@@ -93,61 +86,31 @@ Page {
             var data = (typeof pos === 'string') ? JSON.parse(pos) : pos
             if (data.gcode_position) {
                 zPosition = data.gcode_position[2] || 0
-                zPosLabel.text = zPosition.toFixed(2) + " mm"
             }
             if (data.homing_origin) {
                 zOffset = data.homing_origin[2] || 0
-                zOffsetLabel.text = zOffset.toFixed(3) + " mm"
             }
             if (data.extrude_factor !== undefined) {
                 extrudeFactor = data.extrude_factor
-                extrudeFactorLabel.text = Math.round(extrudeFactor * 100) + "%"
             }
             if (data.speed_factor !== undefined) {
                 speedFactor = data.speed_factor
-                speedFactorLabel.text = Math.round(speedFactor * 100) + "%"
             }
             if (data.speed !== undefined) {
                 requestedSpeed = data.speed / 60 * speedFactor
             }
-            // Update combined speed display
-            var speedText = Math.round(speedFactor * 100) + "% " +
-                          liveVelocity.toFixed(0) + "/" + requestedSpeed.toFixed(0) + " mm/s"
-            speedLabel.text = speedText
         }
 
         // Fan state change
         function onFanStateChanged(fanName, isOn, speed) {
-            if (fanName === "fan") {  // Print cooling fan
+            if (fanName === "fan") {
                 fanSpeed = speed
-                fanSpeedLabel.text = Math.round(speed * 100) + "%"
             }
-        }
-
-        // Klipper error
-        function onKlipperError(message) {
-            currentState = "error"
-            lcdMessageLabel.text = message
-            lcdMessageLabel.visible = true
         }
 
         // Printer state change
         function onPrinterStateChanged(state) {
             updatePrintState(state)
-        }
-    }
-
-    // Flow rate calculation timer (every 2 seconds)
-    Timer {
-        id: flowRateTimer
-        interval: 2000
-        running: currentState === "printing"
-        repeat: true
-        onTriggered: {
-            // TODO: Calculate flow rate from live_extruder_velocity
-            // flowrate = fila_section * live_extruder_velocity
-            // For now, use a placeholder
-            flowrateLabel.text = flowrate.toFixed(1) + " mm³/s"
         }
     }
 
@@ -157,491 +120,597 @@ Page {
         interval: 1000
         running: currentState === "printing" || currentState === "paused"
         repeat: true
-        onTriggered: {
-            updateTimeLeft()
-        }
+        onTriggered: updateTimeLeft()
     }
 
-    // Main content
-    ColumnLayout {
+    // ===== 主布局：横向排列 =====
+    RowLayout {
         anchors.fill: parent
-        anchors.margins: 20
-        spacing: 20
+        anchors.margins: Style.spacingLarge
+        spacing: Style.spacingLarge
 
-        // Top section: 3-column layout (info | progress | temperature)
-        RowLayout {
+        // ===== 左侧：缩略图 + 信息（纵向） =====
+        ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            spacing: 20
+            spacing: Style.spacingMedium
 
-            // Left column: Info displays
-            ColumnLayout {
+            // 缩略图区域 (300x300)
+            Rectangle {
+                Layout.preferredWidth: 300
+                Layout.preferredHeight: 300
+                Layout.alignment: Qt.AlignHCenter
+                color: Style.bgCard
+                radius: Style.radiusSmall
+                border.width: Style.borderThin
+                border.color: Style.border
+
+                Image {
+                    id: thumbnailImage
+                    anchors.fill: parent
+                    anchors.margins: Style.spacingSmall
+                    fillMode: Image.PreserveAspectFit
+                    source: thumbnailUrl || ""
+                    visible: status === Image.Ready
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: showFullscreenThumbnail()
+                    }
+                }
+
+                // 占位符：使用文本代替（小船emoji）
+                Label {
+                    anchors.centerIn: parent
+                    text: "🚢"
+                    font.pixelSize: 120
+                    opacity: 0.3
+                    visible: thumbnailImage.status !== Image.Ready
+                }
+
+                Label {
+                    anchors.centerIn: parent
+                    anchors.verticalCenterOffset: 80
+                    text: "无缩略图"
+                    font.pixelSize: Style.fontMedium
+                    font.family: Style.fontFamily
+                    color: Style.textDisabled
+                    visible: thumbnailImage.status !== Image.Ready
+                }
+            }
+
+            // 文件名
+            Rectangle {
                 Layout.fillWidth: true
-                Layout.fillHeight: true
-                Layout.minimumWidth: 400
-                spacing: 15
+                Layout.preferredHeight: Style.baseUnit * 4
+                color: Style.bgCard
+                radius: Style.radiusSmall
+                border.width: Style.borderThin
+                border.color: Style.border
 
-                // File info section
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 80
-                    color: Style.bgCard
-                    radius: Style.radiusSmall
-                    border.color: Style.border
-                    border.width: 1
+                Label {
+                    anchors.fill: parent
+                    anchors.margins: Style.spacingMedium
+                    text: currentFilename || "未选择文件"
+                    font.pixelSize: Style.fontMedium
+                    font.bold: true
+                    font.family: Style.fontFamily
+                    color: Style.accent
+                    elide: Text.ElideMiddle
+                    verticalAlignment: Text.AlignVCenter
+                }
+            }
 
-                    ColumnLayout {
-                        anchors.fill: parent
-                        anchors.margins: 15
-                        spacing: 8
+            // 进度条
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: Style.baseUnit * 6
+                color: Style.bgCard
+                radius: Style.radiusSmall
+                border.width: Style.borderThin
+                border.color: Style.border
+
+                ColumnLayout {
+                    anchors.fill: parent
+                    anchors.margins: Style.spacingMedium
+                    spacing: Style.spacingSmall
+
+                    RowLayout {
+                        Layout.fillWidth: true
 
                         Label {
-                            id: filenameLabel
-                            text: "未选择文件"
-                            font.pixelSize: 16
-                            font.bold: true
-                            color: Material.accent
-                            elide: Text.ElideMiddle
-                            Layout.fillWidth: true
+                            text: "进度"
+                            font.pixelSize: Style.fontNormal
+                            font.family: Style.fontFamily
+                            color: Style.textSecondary
                         }
 
+                        Item { Layout.fillWidth: true }
+
                         Label {
-                            id: lcdMessageLabel
-                            text: ""
-                            font.pixelSize: 12
-                            opacity: 0.7
-                            visible: text !== ""
-                            Layout.fillWidth: true
+                            text: Math.round(currentProgress * 100) + "%"
+                            font.pixelSize: Style.fontLarge
+                            font.bold: true
+                            font.family: Style.fontFamilyMono
+                            color: Style.accent
                         }
                     }
-                }
 
-                // Time info section
-                Rectangle {
-                    id: timeInfoRect
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    color: Style.bgCard
-                    radius: Style.radiusSmall
-                    border.color: Style.border
-                    border.width: 1
-
-                    GridLayout {
-                        anchors.fill: parent
-                        anchors.margins: 15
-                        columns: 2
-                        rowSpacing: 10
-                        columnSpacing: 10
-
-                        // Elapsed time
-                        Label {
-                            text: "已用时间:"
-                            font.pixelSize: 14
-                            opacity: 0.7
-                        }
-                        Label {
-                            id: elapsedLabel
-                            text: "00:00:00"
-                            font.pixelSize: 14
-                            font.bold: true
-                        }
-
-                        // Time left
-                        Label {
-                            text: "剩余时间:"
-                            font.pixelSize: 14
-                            opacity: 0.7
-                        }
-                        Label {
-                            id: timeLeftLabel
-                            text: "--:--:--"
-                            font.pixelSize: 14
-                            font.bold: true
-                        }
-
-                        // Estimated time
-                        Label {
-                            text: "预计总时:"
-                            font.pixelSize: 14
-                            opacity: 0.7
-                        }
-                        Label {
-                            id: estTimeLabel
-                            text: "--:--:--"
-                            font.pixelSize: 14
-                            font.bold: true
-                        }
-
-                        // Current layer
-                        Label {
-                            text: "当前层:"
-                            font.pixelSize: 14
-                            opacity: 0.7
-                        }
-                        Label {
-                            id: layerLabel
-                            text: "0 / 0"
-                            font.pixelSize: 14
-                            font.bold: true
-                        }
-
-                        // Filament used
-                        Label {
-                            text: "已用耗材:"
-                            font.pixelSize: 14
-                            opacity: 0.7
-                        }
-                        Label {
-                            id: filamentUsedLabel
-                            text: "0.0 m"
-                            font.pixelSize: 14
-                            font.bold: true
-                        }
-                    }
-                }
-
-                // Extrusion/Speed info section
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    color: Style.bgCard
-                    radius: Style.radiusSmall
-                    border.color: Style.border
-                    border.width: 1
-
-                    GridLayout {
-                        anchors.fill: parent
-                        anchors.margins: 15
-                        columns: 2
-                        rowSpacing: 10
-                        columnSpacing: 10
-
-                        // Extrude factor
-                        Label {
-                            text: "挤出倍率:"
-                            font.pixelSize: 14
-                            opacity: 0.7
-                        }
-                        Label {
-                            id: extrudeFactorLabel
-                            text: "100%"
-                            font.pixelSize: 14
-                            font.bold: true
-                        }
-
-                        // Speed factor
-                        Label {
-                            text: "速度倍率:"
-                            font.pixelSize: 14
-                            opacity: 0.7
-                        }
-                        Label {
-                            id: speedFactorLabel
-                            text: "100%"
-                            font.pixelSize: 14
-                            font.bold: true
-                        }
-
-                        // Flow rate
-                        Label {
-                            text: "流量:"
-                            font.pixelSize: 14
-                            opacity: 0.7
-                        }
-                        Label {
-                            id: flowrateLabel
-                            text: "0.0 mm³/s"
-                            font.pixelSize: 14
-                            font.bold: true
-                        }
-
-                        // Speed
-                        Label {
-                            text: "速度:"
-                            font.pixelSize: 14
-                            opacity: 0.7
-                        }
-                        Label {
-                            id: speedLabel
-                            text: "0 / 0 mm/s"
-                            font.pixelSize: 14
-                            font.bold: true
-                        }
-
-                        // Z position
-                        Label {
-                            text: "Z 位置:"
-                            font.pixelSize: 14
-                            opacity: 0.7
-                        }
-                        Label {
-                            id: zPosLabel
-                            text: "0.00 mm"
-                            font.pixelSize: 14
-                            font.bold: true
-                        }
-
-                        // Z offset
-                        Label {
-                            text: "Z 偏移:"
-                            font.pixelSize: 14
-                            opacity: 0.7
-                        }
-                        Label {
-                            id: zOffsetLabel
-                            text: "0.000 mm"
-                            font.pixelSize: 14
-                            font.bold: true
-                        }
-
-                        // Fan speed
-                        Label {
-                            text: "风扇:"
-                            font.pixelSize: 14
-                            opacity: 0.7
-                        }
-                        Label {
-                            id: fanSpeedLabel
-                            text: "0%"
-                            font.pixelSize: 14
-                            font.bold: true
-                        }
+                    ProgressBar {
+                        Layout.fillWidth: true
+                        from: 0
+                        to: 1.0
+                        value: currentProgress
                     }
                 }
             }
 
-            // Center column: Progress circle + thumbnail
-            ColumnLayout {
+            // 打印信息网格
+            Rectangle {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                Layout.minimumWidth: 300
-                spacing: 20
+                color: Style.bgCard
+                radius: Style.radiusSmall
+                border.width: Style.borderThin
+                border.color: Style.border
 
-                // Circular progress
-                Components.CircularProgress {
-                    id: circularProgress
-                    Layout.alignment: Qt.AlignHCenter
-                    Layout.preferredWidth: 250
-                    Layout.preferredHeight: 250
-                    progress: 0.0
-                    lineWidth: 15
+                GridLayout {
+                    anchors.fill: parent
+                    anchors.margins: Style.spacingMedium
+                    columns: 2
+                    rowSpacing: Style.spacingSmall
+                    columnSpacing: Style.spacingMedium
+
+                    // 已用时间
+                    Label {
+                        text: "已用时间"
+                        font.pixelSize: Style.fontNormal
+                        font.family: Style.fontFamily
+                        color: Style.textSecondary
+                    }
+                    Label {
+                        id: elapsedLabel
+                        text: formatTime(printDuration)
+                        font.pixelSize: Style.fontNormal
+                        font.bold: true
+                        font.family: Style.fontFamilyMono
+                        color: Style.textPrimary
+                    }
+
+                    // 剩余时间
+                    Label {
+                        text: "剩余时间"
+                        font.pixelSize: Style.fontNormal
+                        font.family: Style.fontFamily
+                        color: Style.textSecondary
+                    }
+                    Label {
+                        id: timeLeftLabel
+                        text: "--:--:--"
+                        font.pixelSize: Style.fontNormal
+                        font.bold: true
+                        font.family: Style.fontFamilyMono
+                        color: Style.textPrimary
+                    }
+
+                    // 当前层
+                    Label {
+                        text: "当前层"
+                        font.pixelSize: Style.fontNormal
+                        font.family: Style.fontFamily
+                        color: Style.textSecondary
+                    }
+                    Label {
+                        text: currentLayer + " / " + totalLayers
+                        font.pixelSize: Style.fontNormal
+                        font.bold: true
+                        font.family: Style.fontFamilyMono
+                        color: Style.textPrimary
+                    }
+
+                    // 耗材用量
+                    Label {
+                        text: "已用耗材"
+                        font.pixelSize: Style.fontNormal
+                        font.family: Style.fontFamily
+                        color: Style.textSecondary
+                    }
+                    Label {
+                        text: (filamentUsed / 1000).toFixed(1) + " m"
+                        font.pixelSize: Style.fontNormal
+                        font.bold: true
+                        font.family: Style.fontFamilyMono
+                        color: Style.textPrimary
+                    }
+
+                    // Z 位置
+                    Label {
+                        text: "Z 位置"
+                        font.pixelSize: Style.fontNormal
+                        font.family: Style.fontFamily
+                        color: Style.textSecondary
+                    }
+                    Label {
+                        text: zPosition.toFixed(2) + " mm"
+                        font.pixelSize: Style.fontNormal
+                        font.bold: true
+                        font.family: Style.fontFamilyMono
+                        color: Style.textPrimary
+                    }
+
+                    // 速度倍率
+                    Label {
+                        text: "速度倍率"
+                        font.pixelSize: Style.fontNormal
+                        font.family: Style.fontFamily
+                        color: Style.textSecondary
+                    }
+                    Label {
+                        text: Math.round(speedFactor * 100) + "%"
+                        font.pixelSize: Style.fontNormal
+                        font.bold: true
+                        font.family: Style.fontFamilyMono
+                        color: Style.textPrimary
+                    }
+
+                    // 风扇速度
+                    Label {
+                        text: "风扇"
+                        font.pixelSize: Style.fontNormal
+                        font.family: Style.fontFamily
+                        color: Style.textSecondary
+                    }
+                    Label {
+                        text: Math.round(fanSpeed * 100) + "%"
+                        font.pixelSize: Style.fontNormal
+                        font.bold: true
+                        font.family: Style.fontFamilyMono
+                        color: Style.textPrimary
+                    }
+                }
+            }
+        }
+
+        // ===== 右侧：温度控制 + 操作按钮（纵向） =====
+        ColumnLayout {
+            Layout.preferredWidth: 200
+            Layout.fillHeight: true
+            spacing: Style.spacingMedium
+
+            // 温度控制按钮
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: Style.baseUnit * 8
+                color: Style.bgCard
+                radius: Style.radiusSmall
+                border.width: Style.borderMedium
+                border.color: Style.border
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: showTempKeypad("extruder")
                 }
 
-                // Thumbnail
-                Rectangle {
-                    id: thumbnailRect
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    color: Style.bgCard
-                    radius: Style.radiusSmall
-                    border.color: Style.border
-                    border.width: 1
+                ColumnLayout {
+                    anchors.fill: parent
+                    anchors.margins: Style.spacingMedium
+                    spacing: Style.spacingXSmall
 
-                    Image {
-                        id: thumbnailImage
-                        anchors.fill: parent
-                        anchors.margins: 10
-                        fillMode: Image.PreserveAspectFit
-                        source: ""
-                        visible: status === Image.Ready
-
-                        MouseArea {
-                            anchors.fill: parent
-                            onClicked: showFullscreenThumbnail()
-                        }
+                    Components.ThemedIcon {
+                        iconName: "heat-up"
+                        iconSize: Style.iconSizeMedium
+                        Layout.alignment: Qt.AlignHCenter
                     }
 
                     Label {
-                        anchors.centerIn: parent
-                        text: "无缩略图"
-                        opacity: 0.5
-                        visible: thumbnailImage.status !== Image.Ready
+                        text: "热端"
+                        font.pixelSize: Style.fontSmall
+                        font.family: Style.fontFamily
+                        color: Style.textSecondary
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+
+                    Label {
+                        text: Math.round(extruderTemp) + "°C"
+                        font.pixelSize: Style.fontXLarge
+                        font.bold: true
+                        font.family: Style.fontFamilyMono
+                        color: Style.getTempColor(extruderTemp, extruderTarget)
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+
+                    Label {
+                        text: "→ " + Math.round(extruderTarget) + "°C"
+                        font.pixelSize: Style.fontNormal
+                        font.family: Style.fontFamilyMono
+                        color: Style.textSecondary
+                        Layout.alignment: Qt.AlignHCenter
+                        visible: extruderTarget > 0
                     }
                 }
             }
 
-            // Right column: Temperature buttons
-            ColumnLayout {
+            Rectangle {
                 Layout.fillWidth: true
-                Layout.fillHeight: true
-                Layout.minimumWidth: 300
-                spacing: 10
+                Layout.preferredHeight: Style.baseUnit * 8
+                color: Style.bgCard
+                radius: Style.radiusSmall
+                border.width: Style.borderMedium
+                border.color: Style.border
 
-                Label {
-                    text: "温度控制"
-                    font.pixelSize: 16
-                    font.bold: true
-                    color: Material.accent
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: showTempKeypad("bed")
                 }
 
-                ScrollView {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    clip: true
+                ColumnLayout {
+                    anchors.fill: parent
+                    anchors.margins: Style.spacingMedium
+                    spacing: Style.spacingXSmall
 
-                    ColumnLayout {
-                        id: tempButtonsLayout
-                        width: parent.width
-                        spacing: 10
+                    Components.ThemedIcon {
+                        iconName: "bed"
+                        iconSize: Style.iconSizeMedium
+                        Layout.alignment: Qt.AlignHCenter
+                    }
 
-                        // Extruders
-                        Repeater {
-                            id: extruderRepeater
-                            model: ListModel { id: extruderModel }
+                    Label {
+                        text: "热床"
+                        font.pixelSize: Style.fontSmall
+                        font.family: Style.fontFamily
+                        color: Style.textSecondary
+                        Layout.alignment: Qt.AlignHCenter
+                    }
 
-                            Button {
-                                Layout.fillWidth: true
-                                Layout.preferredHeight: 60
-                                text: model.label
-                                font.pixelSize: 13
-                                Material.background: model.isActive ? Material.accent : "#424242"
+                    Label {
+                        text: Math.round(bedTemp) + "°C"
+                        font.pixelSize: Style.fontXLarge
+                        font.bold: true
+                        font.family: Style.fontFamilyMono
+                        color: Style.getTempColor(bedTemp, bedTarget)
+                        Layout.alignment: Qt.AlignHCenter
+                    }
 
-                                contentItem: ColumnLayout {
-                                    spacing: 2
-                                    Label {
-                                        Layout.alignment: Qt.AlignHCenter
-                                        text: model.name
-                                        font.pixelSize: 12
-                                        font.bold: true
-                                    }
-                                    Label {
-                                        Layout.alignment: Qt.AlignHCenter
-                                        text: model.label
-                                        font.pixelSize: 14
-                                    }
-                                }
-
-                                onClicked: navigateToTemperature(model.name)
-                            }
-                        }
-
-                        // Heaters
-                        Repeater {
-                            id: heaterRepeater
-                            model: ListModel { id: heaterModel }
-
-                            Button {
-                                Layout.fillWidth: true
-                                Layout.preferredHeight: 60
-                                text: model.label
-                                font.pixelSize: 13
-                                Material.background: "#424242"
-
-                                contentItem: ColumnLayout {
-                                    spacing: 2
-                                    Label {
-                                        Layout.alignment: Qt.AlignHCenter
-                                        text: model.name
-                                        font.pixelSize: 12
-                                        font.bold: true
-                                    }
-                                    Label {
-                                        Layout.alignment: Qt.AlignHCenter
-                                        text: model.label
-                                        font.pixelSize: 14
-                                    }
-                                }
-
-                                onClicked: navigateToTemperature(model.name)
-                            }
-                        }
+                    Label {
+                        text: "→ " + Math.round(bedTarget) + "°C"
+                        font.pixelSize: Style.fontNormal
+                        font.family: Style.fontFamilyMono
+                        color: Style.textSecondary
+                        Layout.alignment: Qt.AlignHCenter
+                        visible: bedTarget > 0
                     }
                 }
             }
-        }
 
-        // Bottom section: Control buttons
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 80
-            color: Style.bgCard
-            radius: Style.radiusSmall
-            border.color: Style.border
-            border.width: 1
+            // 间隔
+            Item {
+                Layout.fillWidth: true
+                Layout.preferredHeight: Style.spacingMedium
+            }
 
-            RowLayout {
-                id: buttonRow
-                anchors.fill: parent
-                anchors.margins: 15
-                spacing: 15
+            // 操作按钮
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: Style.baseUnit * 6
+                color: currentState === "printing" ? Style.warning : Style.bgDisabled
+                radius: Style.radiusSmall
+                border.width: Style.borderMedium
+                border.color: Style.border
+                visible: currentState === "printing"
 
-                // Buttons will be dynamically changed based on state
-                Button {
-                    id: pauseButton
-                    text: "暂停"
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Material.background: Material.accent
-                    font.pixelSize: 16
-                    visible: currentState === "printing"
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
                     onClicked: pausePrint()
                 }
 
-                Button {
-                    id: resumeButton
-                    text: "继续"
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Material.background: Material.Green
-                    font.pixelSize: 16
-                    visible: currentState === "paused"
+                ColumnLayout {
+                    anchors.centerIn: parent
+                    spacing: Style.spacingXSmall
+
+                    Components.ThemedIcon {
+                        iconName: "pause"
+                        iconSize: Style.iconSizeMedium
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+
+                    Label {
+                        text: "暂停"
+                        font.pixelSize: Style.fontMedium
+                        font.bold: true
+                        font.family: Style.fontFamily
+                        color: Style.bgPrimary
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+                }
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: Style.baseUnit * 6
+                color: Style.success
+                radius: Style.radiusSmall
+                border.width: Style.borderMedium
+                border.color: Style.border
+                visible: currentState === "paused"
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
                     onClicked: resumePrint()
                 }
 
-                Button {
-                    id: cancelButton
-                    text: "取消"
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Material.background: Material.Red
-                    font.pixelSize: 16
-                    visible: currentState === "printing" || currentState === "paused"
+                ColumnLayout {
+                    anchors.centerIn: parent
+                    spacing: Style.spacingXSmall
+
+                    Components.ThemedIcon {
+                        iconName: "resume"
+                        iconSize: Style.iconSizeMedium
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+
+                    Label {
+                        text: "继续"
+                        font.pixelSize: Style.fontMedium
+                        font.bold: true
+                        font.family: Style.fontFamily
+                        color: Style.bgPrimary
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+                }
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: Style.baseUnit * 6
+                color: Style.error
+                radius: Style.radiusSmall
+                border.width: Style.borderMedium
+                border.color: Style.border
+                visible: currentState === "printing" || currentState === "paused"
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
                     onClicked: showCancelDialog()
                 }
 
-                Button {
-                    id: fineTuneButton
-                    text: "微调"
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Material.background: "#FF9800"
-                    font.pixelSize: 16
-                    visible: currentState === "printing" || currentState === "paused"
+                ColumnLayout {
+                    anchors.centerIn: parent
+                    spacing: Style.spacingXSmall
+
+                    Components.ThemedIcon {
+                        iconName: "cancel"
+                        iconSize: Style.iconSizeMedium
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+
+                    Label {
+                        text: "取消"
+                        font.pixelSize: Style.fontMedium
+                        font.bold: true
+                        font.family: Style.fontFamily
+                        color: Style.bgPrimary
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+                }
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: Style.baseUnit * 6
+                color: Style.info
+                radius: Style.radiusSmall
+                border.width: Style.borderMedium
+                border.color: Style.border
+                visible: currentState === "printing" || currentState === "paused"
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
                     onClicked: navigateToFineTune()
                 }
 
-                Button {
-                    id: controlButton
-                    text: "控制"
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Material.background: "#2196F3"
-                    font.pixelSize: 16
-                    visible: currentState === "printing" || currentState === "paused"
-                    onClicked: navigateToControl()
-                }
+                ColumnLayout {
+                    anchors.centerIn: parent
+                    spacing: Style.spacingXSmall
 
-                Button {
-                    id: restartButton
-                    text: "重新打印"
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Material.background: Material.Green
-                    font.pixelSize: 16
-                    visible: currentState === "complete" || currentState === "cancelled" || currentState === "error"
-                    onClicked: restartPrint()
-                }
+                    Components.ThemedIcon {
+                        iconName: "fine-tune"
+                        iconSize: Style.iconSizeMedium
+                        Layout.alignment: Qt.AlignHCenter
+                    }
 
-                Button {
-                    id: menuButton
-                    text: "菜单"
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Material.background: "#9C27B0"
-                    font.pixelSize: 16
-                    visible: currentState !== "printing" && currentState !== "paused" && currentState !== "cancelling"
-                    onClicked: navigateToMenu()
+                    Label {
+                        text: "微调"
+                        font.pixelSize: Style.fontMedium
+                        font.bold: true
+                        font.family: Style.fontFamily
+                        color: Style.bgPrimary
+                        Layout.alignment: Qt.AlignHCenter
+                    }
                 }
+            }
+
+            // 填充剩余空间
+            Item {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+            }
+        }
+    }
+
+    // ===== 温度键盘弹出层 =====
+    Popup {
+        id: tempKeypadPopup
+        modal: true
+        dim: true
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        anchors.centerIn: Overlay.overlay
+        width: Style.windowWidth * 0.6
+        height: Style.baseUnit * 40
+
+        property string heaterType: "extruder"
+
+        enter: Transition {
+            NumberAnimation {
+                property: "opacity"
+                from: 0.0
+                to: 1.0
+                duration: Style.durationFast
+                easing.type: Easing.OutCubic
+            }
+            NumberAnimation {
+                property: "scale"
+                from: 0.9
+                to: 1.0
+                duration: Style.durationFast
+                easing.type: Easing.OutBack
+            }
+        }
+
+        exit: Transition {
+            NumberAnimation {
+                property: "opacity"
+                from: 1.0
+                to: 0.0
+                duration: Style.durationFast
+                easing.type: Easing.InCubic
+            }
+        }
+
+        Components.NumericKeypad {
+            anchors.fill: parent
+            title: "设置 " + (tempKeypadPopup.heaterType === "extruder" ? "热端" : "热床") + " 温度"
+            maxLength: 3
+            inputValue: {
+                if (tempKeypadPopup.heaterType === "extruder") {
+                    return extruderTarget > 0 ? Math.round(extruderTarget).toString() : ""
+                } else {
+                    return bedTarget > 0 ? Math.round(bedTarget).toString() : ""
+                }
+            }
+
+            onConfirmed: (value) => {
+                var temp = parseInt(value)
+                if (temp >= 0 && temp <= 300) {
+                    if (app && app.printer) {
+                        if (tempKeypadPopup.heaterType === "extruder") {
+                            app.printer.setExtruderTemp("extruder", temp)
+                        } else {
+                            app.printer.setBedTemp(temp)
+                        }
+                    }
+                    tempKeypadPopup.close()
+                }
+            }
+
+            onCancelled: {
+                tempKeypadPopup.close()
             }
         }
     }
@@ -654,7 +723,7 @@ Page {
         onAccepted: cancelPrint()
     }
 
-    // Functions
+    // ===== Functions =====
     function pausePrint() {
         if (!printer) return
         console.log("暂停打印")
@@ -674,43 +743,25 @@ Page {
         printer.cancelPrint()
     }
 
-    function restartPrint() {
-        if (!printer) return
-        console.log("重新打印")
-        // TODO: Implement restart logic
-    }
-
     function showCancelDialog() {
         cancelDialog.open()
     }
 
+    function showTempKeypad(heaterType) {
+        tempKeypadPopup.heaterType = heaterType
+        tempKeypadPopup.open()
+    }
+
     function navigateToFineTune() {
-        console.log("Navigate to fine tune")
         var appWindow = root.Window.window
         if (appWindow && appWindow.pageRegistry) {
             appWindow.pageRegistry.navigateTo("fine_tune")
         }
     }
 
-    function navigateToControl() {
-        console.log("Navigate to control")
-        var appWindow = root.Window.window
-        if (appWindow && appWindow.pageRegistry) {
-            appWindow.pageRegistry.navigateTo("control")
-        }
-    }
-
-    function navigateToMenu() {
-        console.log("Navigate to menu")
-        var appWindow = root.Window.window
-        if (appWindow && appWindow.pageRegistry) {
-            appWindow.pageRegistry.goBack()
-        }
-    }
-
     function showFullscreenThumbnail() {
-        // TODO: Show fullscreen thumbnail dialog
         console.log("Show fullscreen thumbnail")
+        // TODO: Implement fullscreen thumbnail dialog
     }
 
     function formatTime(seconds) {
@@ -722,76 +773,21 @@ Page {
                (s < 10 ? "0" + s : s)
     }
 
-    function initTemperatureButtons() {
-        if (!printer || !printer.data || !printer.data.heaters) return
-
-        extruderModel.clear()
-        heaterModel.clear()
-
-        // Get all available heaters from printer data
-        var heaters = printer.data.heaters.available_heaters || []
-
-        for (var i = 0; i < heaters.length; i++) {
-            var heaterName = heaters[i]
-
-            if (heaterName.startsWith("extruder")) {
-                extruderModel.append({
-                    name: heaterName,
-                    label: "0°C / 0°C",
-                    isActive: heaterName === "extruder"
-                })
-            } else if (heaterName.startsWith("heater_")) {
-                var displayName = heaterName.replace("heater_", "").replace("_", " ")
-                heaterModel.append({
-                    name: heaterName,
-                    label: "0°C / 0°C",
-                    isActive: false
-                })
-            }
-        }
-    }
-
-    function updateTemperatureButton(heaterName, current, target, power) {
-        var label = Math.round(current) + "°C / " + Math.round(target) + "°C"
-
-        // Update extruder buttons
-        for (var i = 0; i < extruderModel.count; i++) {
-            if (extruderModel.get(i).name === heaterName) {
-                extruderModel.setProperty(i, "label", label)
-                return
-            }
-        }
-
-        // Update heater buttons
-        for (var j = 0; j < heaterModel.count; j++) {
-            if (heaterModel.get(j).name === heaterName) {
-                heaterModel.setProperty(j, "label", label)
-                return
-            }
-        }
-    }
-
-    function navigateToTemperature(heaterName) {
-        console.log("Navigate to temperature control for:", heaterName)
-        // TODO: Navigate to temperature page
-    }
-
     function updatePrintState(state) {
         console.log("Print state changed to:", state)
 
-        // Map Klipper states to our internal states
         if (state === "printing") {
             currentState = "printing"
         } else if (state === "paused") {
             currentState = "paused"
         } else if (state === "complete") {
             currentState = "complete"
-            circularProgress.progress = 1.0
+            currentProgress = 1.0
         } else if (state === "cancelled") {
             currentState = "cancelled"
         } else if (state === "error") {
             currentState = "error"
-        } else if (state === "standby") {
+        } else if (state === "standby" || state === "ready") {
             currentState = "standby"
         }
     }
@@ -799,59 +795,27 @@ Page {
     function updateTimeLeft() {
         if (currentProgress <= 0 || printDuration <= 0) {
             timeLeftLabel.text = "--:--:--"
-            estTimeLabel.text = "--:--:--"
             return
         }
 
-        // Simple file-based estimation
         var estimatedTotal = printDuration / currentProgress
         var timeLeft = estimatedTotal - printDuration
 
         if (timeLeft > 0) {
             timeLeftLabel.text = formatTime(timeLeft)
-            estTimeLabel.text = formatTime(estimatedTotal)
         } else {
             timeLeftLabel.text = "--:--:--"
-            estTimeLabel.text = "--:--:--"
         }
     }
 
     Component.onCompleted: {
-        console.log("JobStatusPage loaded, printer:", printer)
-        if (printer) {
-            console.log("Printer connected:", printer.connected)
-            console.log("Print progress:", printer.printProgress)
-            console.log("Print state:", printer.printerState)
-        }
-        initTemperatureButtons()
-
-        // 初始化显示当前状态
+        console.log("JobStatusPage loaded (optimized layout)")
         if (printer) {
             currentProgress = printer.printProgress || 0
-            circularProgress.progress = currentProgress
-            console.log("Initial progress:", currentProgress)
-
             currentFilename = printer.printFilename || ""
-            if (currentFilename) {
-                filenameLabel.text = currentFilename
-            }
 
-            // 如果没有打印任务，显示测试数据
-            if (!currentFilename || currentFilename === "") {
-                console.log("No active print, showing test data")
-                filenameLabel.text = "test_model.gcode"
-                currentProgress = 0.45
-                circularProgress.progress = currentProgress
-                printDuration = 1234
-                elapsedLabel.text = formatTime(printDuration)
-                currentLayer = 45
-                totalLayers = 100
-                layerLabel.text = currentLayer + " / " + totalLayers
-                filamentUsedLabel.text = "15.5 m"
-                extrudeFactorLabel.text = "100%"
-                speedFactorLabel.text = "100%"
-                fanSpeedLabel.text = "50%"
-            }
+            // TODO: Load thumbnail from metadata
+            // thumbnailUrl = "..."
         }
     }
 }
