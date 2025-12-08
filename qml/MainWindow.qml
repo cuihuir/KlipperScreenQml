@@ -263,6 +263,27 @@ ApplicationWindow {
         }
     }
 
+    Component {
+        id: calibratePageComponent
+        Pages.CalibratePage {
+            printer: root.printer
+        }
+    }
+
+    Component {
+        id: bedMeshPageComponent
+        Pages.BedMeshPage {
+            printer: root.printer
+        }
+    }
+
+    Component {
+        id: inputShaperPageComponent
+        Pages.InputShaperPage {
+            printer: root.printer
+        }
+    }
+
     // ===== 页面注册表（T016 - 实现页面路由） =====
 
     QtObject {
@@ -282,7 +303,10 @@ ApplicationWindow {
             "temperature": temperaturePageComponent,
             "bed_level": bedLevelPageComponent,
             "zcalibrate": zcalibratePageComponent,
-            "extrude": extrudePageComponent
+            "extrude": extrudePageComponent,
+            "calibrate": calibratePageComponent,
+            "bed_mesh": bedMeshPageComponent,
+            "input_shaper": inputShaperPageComponent
         })
 
         /**

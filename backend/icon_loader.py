@@ -31,14 +31,16 @@ class IconLoader:
     # Supported icon extensions / 支持的图标扩展名
     ICON_EXTENSIONS = ['.svg', '.png']
 
-    def __init__(self, cache=None):
+    def __init__(self, cache=None, custom_icons_dir: Optional[Path] = None):
         """
         Initialize IconLoader.
 
         Args:
             cache: Optional AssetCache instance
+            custom_icons_dir: Optional custom icons directory path
         """
         self.cache = cache
+        self.custom_icons_dir = custom_icons_dir
         self._placeholder_icon = None
 
     def loadIcon(self, icon_name: str, theme: Theme) -> IconAsset:
@@ -87,6 +89,7 @@ class IconLoader:
         使用回退链加载图标。
 
         Fallback priority:
+        0. Custom icons directory (if enabled)
         1. Current theme icons directory
         2. Base theme icons directory
         3. Default placeholder icon
@@ -98,6 +101,13 @@ class IconLoader:
         Returns:
             Optional[IconAsset]: Icon asset or None
         """
+        # Priority 0: Custom icons directory (highest priority)
+        if self.custom_icons_dir and self.custom_icons_dir.exists():
+            icon_path = self._find_icon_file(icon_name, self.custom_icons_dir)
+            if icon_path:
+                logger.info(f"Using custom icon for: {icon_name}")
+                return self._create_icon_asset(icon_name, icon_path)
+
         # Priority 1: Current theme icons directory
         if theme.icons_dir and theme.icons_dir.exists():
             icon_path = self._find_icon_file(icon_name, theme.icons_dir)
@@ -121,6 +131,12 @@ class IconLoader:
         Find icon file in directory.
         在目录中查找图标文件。
 
+        Supports special icon naming patterns:
+        - Numbered extruders: extruder-0, extruder-1, ..., extruder-9
+        - Bed leveling positions: bed-level-t-l, bed-level-t-r, etc.
+        - Battery states: battery-0, battery-25, battery-50, battery-75, battery-100, battery-charging, battery-unknown
+        - WiFi signal: wifi_excellent, wifi_good, wifi_fair, wifi_poor
+
         Args:
             icon_name (str): Icon name (without extension)
             search_dir (Path): Directory to search
@@ -128,10 +144,20 @@ class IconLoader:
         Returns:
             Optional[Path]: Icon file path or None
         """
+        # Direct lookup first
         for ext in self.ICON_EXTENSIONS:
             icon_path = search_dir / f"{icon_name}{ext}"
             if icon_path.exists():
                 return icon_path
+
+        # Handle numbered extruders (extruder-0 through extruder-9)
+        # If requesting extruder-X but not found, fall back to extruder.svg
+        if icon_name.startswith('extruder-') and icon_name[-1].isdigit():
+            for ext in self.ICON_EXTENSIONS:
+                fallback = search_dir / f"extruder{ext}"
+                if fallback.exists():
+                    logger.debug(f"Using fallback for {icon_name}: extruder{ext}")
+                    return fallback
 
         return None
 

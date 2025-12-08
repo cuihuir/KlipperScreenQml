@@ -7,8 +7,8 @@
   "ui": {
     "theme": "dark",
     "language": "zh_CN",
-    "width": 1920,
-    "height": 440
+    "width": 1024,
+    "height": 600
   },
   "theme": {
     "selected_theme": "material-dark",

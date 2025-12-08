@@ -61,13 +61,12 @@ HomeWidget {
             Layout.preferredHeight: Style.baseUnit * 5
             spacing: Style.spacingMedium
 
-            // 风扇图标（旋转动画）
-            Text {
-                text: "⚙"
-                font.pixelSize: Style.fontXXLarge
-                font.family: Style.fontFamily
-                color: root.fanOn ? Style.info : Style.textDisabled
+            // 风扇图标（旋转动画） - 使用 KlipperScreen SVG
+            ThemedIcon {
+                iconName: root.fanOn ? "fan-on" : "fan"
+                iconSize: Style.fontXXLarge
                 Layout.alignment: Qt.AlignVCenter
+                opacity: root.fanOn ? 1.0 : 0.5
 
                 // 旋转动画
                 RotationAnimator {

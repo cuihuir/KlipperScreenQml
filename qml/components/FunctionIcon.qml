@@ -34,20 +34,15 @@ Rectangle {
     property string label: ""
 
     /**
-     * 图标路径（PNG/SVG）
-     * 当前使用 emoji 占位符，未来可替换为实际图标文件
+     * KlipperScreen 图标名称（如 "settings", "control" 等）
+     * 使用 ThemedIcon 组件从主题加载 SVG 图标
      */
-    property string iconPath: ""
+    property string iconName: ""
 
     /**
      * 目标页面 ID（用于导航）
      */
     property string targetPage: ""
-
-    /**
-     * 图标 emoji（占位符，优先于 iconPath）
-     */
-    property string iconEmoji: "📄"
 
     /**
      * 是否禁用
@@ -128,40 +123,17 @@ Rectangle {
         anchors.centerIn: parent
         spacing: Style.spacingSmall
 
-        // 图标区域
-        Item {
+        // 图标区域 - 使用 ThemedIcon 加载 KlipperScreen SVG
+        ThemedIcon {
+            iconName: root.iconName
+            iconSize: Style.baseUnit * 3
             Layout.preferredWidth: Style.baseUnit * 4
             Layout.preferredHeight: Style.baseUnit * 4
             Layout.alignment: Qt.AlignHCenter
+            opacity: root.enabled ? 1.0 : 0.5
 
-            // 占位符 Emoji（当前使用）
-            Text {
-                visible: root.iconEmoji !== "" && root.iconPath === ""
-                anchors.centerIn: parent
-                text: root.iconEmoji
-                font.pixelSize: Style.fontXXLarge
-                font.family: Style.fontFamily
-                color: root.enabled ? Style.textPrimary : Style.textDisabled
-                opacity: root.enabled ? 1.0 : 0.5
-
-                Behavior on color {
-                    ColorAnimation { duration: Style.durationFast }
-                }
-            }
-
-            // 图标图片（未来实现）
-            Image {
-                visible: root.iconPath !== ""
-                anchors.centerIn: parent
-                width: Style.baseUnit * 3
-                height: Style.baseUnit * 3
-                source: root.iconPath
-                fillMode: Image.PreserveAspectFit
-                opacity: root.enabled ? 1.0 : 0.5
-
-                Behavior on opacity {
-                    NumberAnimation { duration: Style.durationFast }
-                }
+            Behavior on opacity {
+                NumberAnimation { duration: Style.durationFast }
             }
         }
 

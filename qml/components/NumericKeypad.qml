@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import ".."
+import "." as Components
 
 // 数字键盘组件
 Rectangle {
@@ -41,68 +42,109 @@ Rectangle {
             color: Style.divider
         }
 
-        // 输入显示
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: Style.baseUnit * 4
-            color: Style.bgSecondary
-            border.width: Style.borderMedium
-            border.color: Style.accent
-
-            Label {
-                anchors.centerIn: parent
-                text: inputValue || "---"
-                font.pixelSize: Style.fontXXLarge
-                font.family: Style.fontFamilyMono
-                font.bold: true
-                color: inputValue ? Style.accent : Style.textDisabled
-            }
-        }
-
-        // 数字键盘网格
+        // 整体键盘布局 (5列x4行)
+        // 布局: [输入框__________][占位符][冷却]
+        //       [1][2][3][删除][取消]
+        //       [4][5][6][ . ][确认↑]
+        //       [7][8][9][ 0 ][确认↓]
         GridLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            columns: 3
-            rowSpacing: Style.spacingSmall
-            columnSpacing: Style.spacingSmall
+            columns: 5
+            rows: 4
+            rowSpacing: Style.spacingMedium
+            columnSpacing: Style.spacingMedium
 
-            // 数字 1-9
+            // ===== 第零行：输入显示 =====
+            // 输入框 (占据 3 列)
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: Style.baseUnit * 5
+                Layout.columnSpan: 3
+                color: Style.bgSecondary
+                border.width: Style.borderMedium
+                border.color: Style.accent
+
+                Label {
+                    anchors.centerIn: parent
+                    text: inputValue || "---"
+                    font.pixelSize: Style.fontXXLarge
+                    font.family: Style.fontFamilyMono
+                    font.bold: true
+                    color: inputValue ? Style.accent : Style.textDisabled
+                }
+            }
+
+            // 占位框
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: Style.baseUnit * 5
+                color: Style.bgPrimary
+                border.width: Style.borderThin
+                border.color: Style.divider
+                opacity: 0.3
+            }
+
+            // 冷却按钮
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: Style.baseUnit * 5
+                color: Style.info
+                border.width: Style.borderMedium
+                border.color: Style.divider
+
+                ColumnLayout {
+                    anchors.centerIn: parent
+                    spacing: 2
+
+                    Label {
+                        text: "❄"
+                        font.pixelSize: Style.fontMedium
+                        color: Style.bgPrimary
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+
+                    Label {
+                        text: "冷却"
+                        font.pixelSize: Style.fontXSmall
+                        font.bold: true
+                        color: Style.bgPrimary
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        inputValue = "0"
+                        confirm()
+                    }
+                }
+            }
+
+            // ===== 第一行 =====
+            // 数字 1-3
             Repeater {
-                model: 9
-
+                model: 3
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     color: Style.bgSecondary
-                    border.width: Style.borderThin
+                    border.width: Style.borderMedium
                     border.color: Style.divider
-
-                    // Hover效果
-                    Rectangle {
-                        anchors.fill: parent
-                        color: Style.accent
-                        opacity: mouseArea.containsMouse ? 0.2 : 0
-                        z: -1
-
-                        Behavior on opacity {
-                            NumberAnimation { duration: Style.durationFast }
-                        }
-                    }
 
                     Label {
                         anchors.centerIn: parent
                         text: index + 1
-                        font.pixelSize: Style.fontXXLarge
+                        font.pixelSize: Style.fontXXXLarge
                         font.family: Style.fontFamilyMono
                         font.bold: true
                         color: Style.textPrimary
                     }
 
                     MouseArea {
-                        id: mouseArea
                         anchors.fill: parent
-                        hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: appendDigit(index + 1)
                     }
@@ -114,15 +156,26 @@ Rectangle {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 color: Style.warning
-                border.width: Style.borderThin
+                border.width: Style.borderMedium
                 border.color: Style.divider
 
-                Label {
+                ColumnLayout {
                     anchors.centerIn: parent
-                    text: "←"
-                    font.pixelSize: Style.fontXXLarge
-                    font.bold: true
-                    color: Style.bgPrimary
+                    spacing: 2
+
+                    Components.ThemedIcon {
+                        iconName: "arrow-left"
+                        iconSize: Style.fontLarge
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+
+                    Label {
+                        text: "删除"
+                        font.pixelSize: Style.fontXSmall
+                        font.bold: true
+                        color: Style.bgPrimary
+                        Layout.alignment: Qt.AlignHCenter
+                    }
                 }
 
                 MouseArea {
@@ -132,58 +185,124 @@ Rectangle {
                 }
             }
 
-            // 数字 0
+            // 取消按钮
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                color: Style.error
+                border.width: Style.borderMedium
+                border.color: Style.divider
+
+                ColumnLayout {
+                    anchors.centerIn: parent
+                    spacing: 2
+
+                    Label {
+                        text: "✕"
+                        font.pixelSize: Style.fontLarge
+                        font.bold: true
+                        color: Style.bgPrimary
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+
+                    Label {
+                        text: "取消"
+                        font.pixelSize: Style.fontXSmall
+                        font.bold: true
+                        color: Style.bgPrimary
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.cancelled()
+                }
+            }
+
+            // ===== 第二行 =====
+            // 数字 4-6
+            Repeater {
+                model: 3
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    color: Style.bgSecondary
+                    border.width: Style.borderMedium
+                    border.color: Style.divider
+
+                    Label {
+                        anchors.centerIn: parent
+                        text: index + 4
+                        font.pixelSize: Style.fontXXXLarge
+                        font.family: Style.fontFamilyMono
+                        font.bold: true
+                        color: Style.textPrimary
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: appendDigit(index + 4)
+                    }
+                }
+            }
+
+            // 小数点
             Rectangle {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 color: Style.bgSecondary
-                border.width: Style.borderThin
+                border.width: Style.borderMedium
                 border.color: Style.divider
-
-                // Hover效果
-                Rectangle {
-                    anchors.fill: parent
-                    color: Style.accent
-                    opacity: zeroMouseArea.containsMouse ? 0.2 : 0
-                    z: -1
-
-                    Behavior on opacity {
-                        NumberAnimation { duration: Style.durationFast }
-                    }
-                }
 
                 Label {
                     anchors.centerIn: parent
-                    text: "0"
-                    font.pixelSize: Style.fontXXLarge
+                    text: "."
+                    font.pixelSize: Style.fontXXXLarge
                     font.family: Style.fontFamilyMono
                     font.bold: true
                     color: Style.textPrimary
                 }
 
                 MouseArea {
-                    id: zeroMouseArea
                     anchors.fill: parent
-                    hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: appendDigit(0)
+                    onClicked: {
+                        if (inputValue.indexOf(".") === -1 && inputValue.length > 0) {
+                            inputValue += "."
+                        }
+                    }
                 }
             }
 
-            // 确认键
+            // 确认按钮 (rowSpan=2)
             Rectangle {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+                Layout.rowSpan: 2
                 color: Style.success
-                border.width: Style.borderThin
+                border.width: Style.borderMedium
                 border.color: Style.divider
 
-                Label {
+                ColumnLayout {
                     anchors.centerIn: parent
-                    text: "✓"
-                    font.pixelSize: Style.fontXXLarge
-                    font.bold: true
-                    color: Style.bgPrimary
+                    spacing: Style.spacingSmall
+
+                    Components.ThemedIcon {
+                        iconName: "complete"
+                        iconSize: Style.fontXXLarge
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+
+                    Label {
+                        text: "确认"
+                        font.pixelSize: Style.fontMedium
+                        font.bold: true
+                        color: Style.bgPrimary
+                        Layout.alignment: Qt.AlignHCenter
+                    }
                 }
 
                 MouseArea {
@@ -192,31 +311,60 @@ Rectangle {
                     onClicked: confirm()
                 }
             }
-        }
 
-        // 取消按钮
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: Style.buttonHeight
-            color: Style.error
-            border.width: Style.borderThin
-            border.color: Style.divider
+            // ===== 第三行 =====
+            // 数字 7-9
+            Repeater {
+                model: 3
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    color: Style.bgSecondary
+                    border.width: Style.borderMedium
+                    border.color: Style.divider
 
-            Label {
-                anchors.centerIn: parent
-                text: "CANCEL"
-                font.pixelSize: Style.fontMedium
-                font.family: Style.fontFamily
-                font.bold: true
-                font.letterSpacing: 2
-                color: Style.textPrimary
+                    Label {
+                        anchors.centerIn: parent
+                        text: index + 7
+                        font.pixelSize: Style.fontXXXLarge
+                        font.family: Style.fontFamilyMono
+                        font.bold: true
+                        color: Style.textPrimary
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: appendDigit(index + 7)
+                    }
+                }
             }
 
-            MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: root.cancelled()
+            // 数字 0
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                color: Style.bgSecondary
+                border.width: Style.borderMedium
+                border.color: Style.divider
+
+                Label {
+                    anchors.centerIn: parent
+                    text: "0"
+                    font.pixelSize: Style.fontXXXLarge
+                    font.family: Style.fontFamilyMono
+                    font.bold: true
+                    color: Style.textPrimary
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: appendDigit(0)
+                }
             }
+
+            // 确认按钮占据这个位置 (rowSpan=2)
         }
     }
 

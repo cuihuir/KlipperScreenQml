@@ -8,11 +8,12 @@ Image {
     // Public properties / 公共属性
     property string iconName: ""
     property int iconSize: 48
+    property real dpiScale: 1.0  // DPI scaling factor
 
-    // Image properties / 图标属性
+    // Image properties / 图标属性 (考虑 DPI)
     width: iconSize
     height: iconSize
-    sourceSize: Qt.size(iconSize, iconSize)
+    sourceSize: Qt.size(iconSize * dpiScale, iconSize * dpiScale)
 
     // Performance optimization / 性能优化
     cache: true           // Enable caching
@@ -35,7 +36,7 @@ Image {
         anchors.fill: parent
         visible: root.status === Image.Error && showPlaceholder
         color: "transparent"
-        border.color: "#FF0000"
+        border.color: Qt.rgba(1, 0, 0, 1)  // Pure red
         border.width: 1
         opacity: 0.3
 
@@ -43,7 +44,7 @@ Image {
             anchors.centerIn: parent
             text: "?"
             font.pixelSize: root.iconSize * 0.5
-            color: "#FF0000"
+            color: Qt.rgba(1, 0, 0, 1)  // Pure red
         }
     }
 

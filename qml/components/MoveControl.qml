@@ -2,15 +2,16 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
+import ".."
 
 Rectangle {
     id: root
 
     property var printer: null
 
-    color: "#2d2d2d"
-    radius: 12
-    border.color: "#404040"
+    color: Style.bgCard
+    radius: Style.radiusSmall
+    border.color: Style.border
     border.width: 1
 
     ColumnLayout {
@@ -29,7 +30,7 @@ Rectangle {
         Rectangle {
             Layout.fillWidth: true
             height: 1
-            color: "#404040"
+            color: Style.border
         }
 
         // XY 控制
@@ -44,7 +45,7 @@ Rectangle {
                 width: 60
                 height: 60
                 radius: 30
-                color: "#424242"
+                color: Style.bgSecondary
                 border.color: Material.accent
                 border.width: 2
 

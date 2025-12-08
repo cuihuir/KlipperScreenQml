@@ -761,7 +761,7 @@ class MoonrakerClient(QObject):
                     "virtual_sdcard": ["progress", "file_position"],
                     "webhooks": ["state", "state_message"],
                     "toolhead": ["position", "homed_axes"],
-                    "gcode_move": ["gcode_position", "speed", "speed_factor"],
+                    "gcode_move": ["gcode_position", "speed", "speed_factor", "extrude_factor", "homing_origin"],
                     "display_status": ["progress", "message"],
                     "motion_report": ["live_velocity", "live_extruder_velocity"],
                 }
@@ -859,18 +859,18 @@ class MoonrakerClient(QObject):
             if 'progress' in vsd:
                 import time
                 current_time = time.time()
-                new_progress = round(vsd['progress'] * 100, 1)
+                new_progress = round(vsd['progress'], 3)  # 保持 0-1 范围，3位小数
 
                 # 存储原始进度用于 Fluidd 算法计算
                 self._file_progress = vsd['progress']
 
                 # 只在进度变化且距离上次更新超过 1 秒时才更新
-                if (new_progress != self._print_progress and
+                if (abs(new_progress - self._print_progress) >= 0.01 and  # 至少变化 1%
                     current_time - self._last_progress_update_time >= 1.0):
                     self._print_progress = new_progress
                     self._last_progress_update_time = current_time
                     progress_data = {
-                        'progress': self._print_progress,
+                        'progress': self._print_progress,  # 发送 0-1 范围的值
                         'filename': self._print_filename
                     }
                     self.printProgressChanged.emit(progress_data)
@@ -907,6 +907,11 @@ class MoonrakerClient(QObject):
 
         # 位置信息 (从 gcode_move 获取) + Fluidd 层数计算
         position_updated = False
+        speed_factor = 1.0
+        extrude_factor = 1.0
+        speed = 0.0
+        homing_origin = [0, 0, 0]
+
         if 'gcode_move' in status:
             gm = status['gcode_move']
             if 'gcode_position' in gm:
@@ -937,6 +942,20 @@ class MoonrakerClient(QObject):
                     self._position_z = new_z
                     position_updated = True
 
+            # 速度和挤出倍率
+            if 'speed_factor' in gm:
+                speed_factor = gm['speed_factor']
+                position_updated = True
+            if 'extrude_factor' in gm:
+                extrude_factor = gm['extrude_factor']
+                position_updated = True
+            if 'speed' in gm:
+                speed = gm['speed']
+                position_updated = True
+            if 'homing_origin' in gm:
+                homing_origin = gm['homing_origin']
+                position_updated = True
+
         # 归零状态 (从 toolhead 获取)
         if 'toolhead' in status:
             th = status['toolhead']
@@ -947,10 +966,12 @@ class MoonrakerClient(QObject):
         # 发送位置更新信号
         if position_updated:
             position_data = {
-                'x': self._position_x,
-                'y': self._position_y,
-                'z': self._position_z,
-                'homed_axes': self._homed_axes
+                'gcode_position': [self._position_x, self._position_y, self._position_z],
+                'homed_axes': self._homed_axes,
+                'speed_factor': speed_factor,
+                'extrude_factor': extrude_factor,
+                'speed': speed,
+                'homing_origin': homing_origin
             }
             self.positionUpdated.emit(position_data)
 
@@ -990,10 +1011,14 @@ class MoonrakerClient(QObject):
         # 发送打印统计更新信号
         if stats_updated:
             stats_data = {
-                'duration': self._print_duration,
-                'filament': self._filament_used,
-                'current_layer': self._current_layer,
-                'total_layers': self._total_layers
+                'state': self._printer_state,
+                'filename': self._print_filename,
+                'print_duration': self._print_duration,
+                'filament_used': self._filament_used,
+                'info': {
+                    'current_layer': self._current_layer,
+                    'total_layer': self._total_layers
+                }
             }
             self.printStatsUpdated.emit(stats_data)
 

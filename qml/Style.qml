@@ -44,14 +44,21 @@ QtObject {
     // 基础单位（根据窗口尺寸动态计算）
     property real windowWidth: 1920  // 宽屏设计
     property real windowHeight: 440  // 超宽屏 4.36:1 比例
+    property real pixelDensity: 1.0  // DPI scaling factor (1.0 = 96 DPI baseline)
 
     function updateWindowSize(w, h) {
         windowWidth = w
         windowHeight = h
     }
 
-    // 基础单位
-    readonly property real baseUnit: Math.min(windowWidth, windowHeight) / 50
+    function updatePixelDensity(density) {
+        // Update DPI scaling based on Screen.pixelDensity
+        // Typical values: 1.0 (96 DPI), 1.5 (144 DPI), 2.0 (192 DPI)
+        pixelDensity = Math.max(1.0, Math.min(density, 3.0))  // Clamp between 1.0-3.0
+    }
+
+    // 基础单位（考虑 DPI 缩放）
+    readonly property real baseUnit: Math.min(windowWidth, windowHeight) / 50 * pixelDensity
 
     // 字体大小
     readonly property real fontXXLarge: baseUnit * 4.5  // 超超大（主要数字）

@@ -14,6 +14,11 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+class ValidationError(Exception):
+    """数据验证失败 / Data validation failed"""
+    pass
+
+
 class ThemeNotFoundError(Exception):
     """主题目录不存在 / Theme directory not found"""
     pass
@@ -147,9 +152,15 @@ class ThemeManager:
             theme_colors = parser.parse_file(str(theme_css))
             merged_colors.update(theme_colors)
 
+        # Convert named colors to hex BEFORE creating ColorPalette
+        # 在创建 ColorPalette 前先转换命名颜色为十六进制
+        normalized_colors = {}
+        for key, value in merged_colors.items():
+            normalized_colors[key] = parser._css_to_qml_color(value)
+
         # Convert to ColorPalette
         try:
-            palette = ColorPalette.from_dict(merged_colors)
+            palette = ColorPalette.from_dict(normalized_colors)
         except Exception as e:
             logger.warning(f"Failed to parse some colors, using defaults: {e}")
             # Create default palette

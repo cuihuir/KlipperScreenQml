@@ -1,16 +1,16 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import "."
+import ".."
 
 Rectangle {
     id: root
 
     // Properties
-    property string title: ""
+    property string heaterName: ""
     property real currentTemp: 0
     property real targetTemp: 0
-    property bool visible: true
+    property bool showControls: true
 
     // Metro style
     color: "transparent"

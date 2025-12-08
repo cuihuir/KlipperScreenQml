@@ -81,10 +81,10 @@ HomeWidget {
                     opacity: 0.6
                 }
 
-                Text {
+                ThemedIcon {
                     anchors.centerIn: parent
-                    text: "💡"
-                    font.pixelSize: Style.fontLarge
+                    iconName: "light"
+                    iconSize: Style.fontLarge
                     opacity: root.ledOn ? 1.0 : 0.3
                 }
             }

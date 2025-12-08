@@ -85,11 +85,11 @@ Rectangle {
                         border.width: Style.borderThin
                         border.color: Style.divider
 
-                        Label {
+                        ThemedIcon {
                             anchors.centerIn: parent
-                            text: "▲"
-                            font.pixelSize: Style.fontMedium
-                            color: scrollView.ScrollBar.vertical.position > 0 ? Style.bgPrimary : Style.textDisabled
+                            iconName: "arrow-up"
+                            iconSize: Style.fontMedium
+                            opacity: scrollView.ScrollBar.vertical.position > 0 ? 1.0 : 0.3
                         }
 
                         MouseArea {
@@ -112,11 +112,11 @@ Rectangle {
                         border.width: Style.borderThin
                         border.color: Style.divider
 
-                        Label {
+                        ThemedIcon {
                             anchors.centerIn: parent
-                            text: "▼"
-                            font.pixelSize: Style.fontMedium
-                            color: (scrollView.ScrollBar.vertical.position + scrollView.ScrollBar.vertical.size) < 1.0 ? Style.bgPrimary : Style.textDisabled
+                            iconName: "arrow-down"
+                            iconSize: Style.fontMedium
+                            opacity: (scrollView.ScrollBar.vertical.position + scrollView.ScrollBar.vertical.size) < 1.0 ? 1.0 : 0.3
                         }
 
                         MouseArea {

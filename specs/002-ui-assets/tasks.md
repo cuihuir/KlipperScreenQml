@@ -30,11 +30,11 @@ Tasks grouped by user story to enable independent implementation and testing.
 **目的 / Purpose**: 项目初始化和基础结构设置
 Project initialization and basic structure setup
 
-- [ ] T001 验证 KlipperScreen 目录结构存在于 `KlipperScreen/styles/`
-- [ ] T002 创建 Python 后端模块目录结构：`backend/theme_manager.py`, `backend/icon_loader.py`, `backend/css_parser.py`, `backend/asset_cache.py`
-- [ ] T003 [P] 创建 QML 主题组件目录结构：`qml/themes/`, `qml/components/`
-- [ ] T004 [P] 配置 Python 开发环境：验证 PySide6 >= 6.7.0, Qt SVG 模块已安装
-- [ ] T005 [P] 在 `config.json` 中添加主题配置选项（selected_theme, theme_dir, fallback_theme）
+- [x] T001 验证 KlipperScreen 目录结构存在于 `KlipperScreen/styles/`
+- [x] T002 创建 Python 后端模块目录结构：`backend/theme_manager.py`, `backend/icon_loader.py`, `backend/css_parser.py`, `backend/asset_cache.py`
+- [x] T003 [P] 创建 QML 主题组件目录结构：`qml/themes/`, `qml/components/`
+- [x] T004 [P] 配置 Python 开发环境：验证 PySide6 >= 6.7.0, Qt SVG 模块已安装
+- [x] T005 [P] 在 `config.json` 中添加主题配置选项（selected_theme, theme_dir, fallback_theme）
 
 ---
 
@@ -48,14 +48,14 @@ No user story work can begin until this phase is complete
 
 ### 数据模型 / Data Models
 
-- [ ] T006 [P] 创建 `ColorPalette` 数据类在 `backend/models/color_palette.py`（包含 color1-4, bg, active, warning, error, text 等字段和验证）
-- [ ] T007 [P] 创建 `IconAsset` 数据类在 `backend/models/icon_asset.py`（name, file_path, format, svg_data, cached_time）
-- [ ] T008 [P] 创建 `Theme` 数据类在 `backend/models/theme.py`（name, base_dir, colors, icons_dir, icons 字典）
-- [ ] T009 [P] 创建 `ThemeConfiguration` 数据类在 `backend/models/theme_config.py`（selected_theme, theme_dir, fallback_theme, custom_icons_enabled）
+- [x] T006 [P] 创建 `ColorPalette` 数据类在 `backend/models/color_palette.py`（包含 color1-4, bg, active, warning, error, text 等字段和验证）
+- [x] T007 [P] 创建 `IconAsset` 数据类在 `backend/models/icon_asset.py`（name, file_path, format, svg_data, cached_time）
+- [x] T008 [P] 创建 `Theme` 数据类在 `backend/models/theme.py`（name, base_dir, colors, icons_dir, icons 字典）
+- [x] T009 [P] 创建 `ThemeConfiguration` 数据类在 `backend/models/theme_config.py`（selected_theme, theme_dir, fallback_theme, custom_icons_enabled）
 
 ### CSS 解析器 / CSS Parser
 
-- [ ] T010 实现 GTK CSS 解析器在 `backend/css_parser.py`：
+- [x] T010 实现 GTK CSS 解析器在 `backend/css_parser.py`：
   - `parse_file(css_path)` - 使用正则表达式提取 @define-color 定义
   - `_resolve_references(colors)` - 递归解析颜色变量引用（@bg, @text）
   - `to_qml_format(colors)` - 转换为 QML Singleton 格式
@@ -64,7 +64,7 @@ No user story work can begin until this phase is complete
 
 ### 素材缓存 / Asset Cache
 
-- [ ] T011 实现资产缓存管理器在 `backend/asset_cache.py`：
+- [x] T011 实现资产缓存管理器在 `backend/asset_cache.py`：
   - 初始化 `max_cache_size = 20MB`
   - `get(icon_name)` - 获取图标并更新访问时间
   - `set(icon_name, icon)` - 添加图标，必要时 LRU 淘汰
@@ -89,7 +89,7 @@ Side-by-side screenshots of QtKs and KlipperScreen verify icons, colors, button 
 
 #### 图标加载器 / Icon Loader
 
-- [ ] T012 [P] [US1] 实现图标加载器在 `backend/icon_loader.py`：
+- [x] T012 [P] [US1] 实现图标加载器在 `backend/icon_loader.py`：
   - 依赖 `AssetCache`
   - `loadIcon(icon_name, theme)` - 加载指定图标，优先使用缓存
   - `preloadIcons(icon_names, theme)` - 预加载图标列表
@@ -98,7 +98,7 @@ Side-by-side screenshots of QtKs and KlipperScreen verify icons, colors, button 
 
 #### 主题管理器 / Theme Manager
 
-- [ ] T013 [US1] 实现主题管理器在 `backend/theme_manager.py`：
+- [x] T013 [US1] 实现主题管理器在 `backend/theme_manager.py`：
   - 依赖 `CSSParser`, `IconLoader`, `AssetCache`
   - `loadTheme(theme_name)` - 加载主题（解析 CSS + 扫描图标）
   - `parseThemeColors(css_file_path)` - 解析主题颜色
@@ -108,14 +108,14 @@ Side-by-side screenshots of QtKs and KlipperScreen verify icons, colors, button 
 
 #### QML 颜色模块 / QML Color Module
 
-- [ ] T014 [P] [US1] 创建 QML 颜色 Singleton 在 `qml/themes/KlipperColors.qml`：
+- [x] T014 [P] [US1] 创建 QML 颜色 Singleton 在 `qml/themes/KlipperColors.qml`：
   - `pragma Singleton`
   - readonly property color 定义（color1-4, bg, active, warning, error, text, textInv, lines）
   - 从 `backend/css_parser.py` 自动生成或手动映射
 
 #### QML 主题提供者 / QML Theme Provider
 
-- [ ] T015 [US1] 实现 QML 主题提供者（QObject）在 `backend/theme_provider.py`：
+- [x] T015 [US1] 实现 QML 主题提供者（QObject）在 `backend/theme_provider.py`：
   - 继承 `QObject`
   - Property: `currentTheme`, `backgroundColor`, `textColor`, `color1-4`, `activeColor`, `warningColor`, `errorColor`
   - Signal: `themeChanged()`, `themeLoadError(errorMessage)`
@@ -124,7 +124,7 @@ Side-by-side screenshots of QtKs and KlipperScreen verify icons, colors, button 
 
 #### 主应用集成 / Main Application Integration
 
-- [ ] T016 [US1] 在 `main.py` 中集成主题系统：
+- [x] T016 [US1] 在 `main.py` 中集成主题系统：
   - 创建 `ThemeManager` 实例
   - 加载默认主题（material-dark）
   - 创建 `ThemeProvider` 实例
@@ -133,7 +133,7 @@ Side-by-side screenshots of QtKs and KlipperScreen verify icons, colors, button 
 
 #### QML 主题化图标组件 / QML Themed Icon Component
 
-- [ ] T017 [P] [US1] 创建可重用主题化图标组件在 `qml/components/ThemedIcon.qml`：
+- [x] T017 [P] [US1] 创建可重用主题化图标组件在 `qml/components/ThemedIcon.qml`：
   - 属性：`iconName`, `iconSize`（默认 48x48）
   - 使用 `ThemeProvider.getIconPath(iconName)`
   - 设置 `cache: true`, `asynchronous: true`, `sourceSize` 限制
@@ -141,7 +141,7 @@ Side-by-side screenshots of QtKs and KlipperScreen verify icons, colors, button 
 
 #### 样式文件更新 / Style File Updates
 
-- [ ] T018 [US1] 更新 `qml/Style.qml` 使用 `ThemeProvider` 颜色：
+- [x] T018 [US1] 更新 `qml/Style.qml` 使用 `ThemeProvider` 颜色：
   - 导入 `KlipperColors` Singleton
   - 替换硬编码颜色为 `ThemeProvider.backgroundColor` 等
   - 保持现有 `baseUnit`, `durationFast` 等非颜色属性
@@ -161,17 +161,17 @@ Configure each theme in config file, restart app, verify interface matches Klipp
 
 ### 实现任务 / Implementation Tasks
 
-- [ ] T019 [P] [US2] 实现主题配置加载在 `backend/config_loader.py`：
+- [x] T019 [P] [US2] 实现主题配置加载在 `backend/config_loader.py`：
   - `load_theme_config(config_path)` - 从 `config.json` 读取主题配置
   - 验证 `selected_theme` 存在于可用主题中
   - 返回 `ThemeConfiguration` 对象
 
-- [ ] T020 [US2] 扩展 `ThemeManager.loadTheme()` 支持所有 5 个主题：
+- [x] T020 [US2] 扩展 `ThemeManager.loadTheme()` 支持所有 5 个主题：
   - 验证主题目录：`KlipperScreen/styles/{material-dark, material-darker, material-light, colorized, z-bolt}`
   - 合并基础 CSS（base.css）和主题特定 CSS（style.css）
   - 处理主题回退：选中主题 → 基础主题
 
-- [ ] T021 [P] [US2] 为每个主题生成 QML 颜色 Singleton（如需要）：
+- [x] T021 [P] [US2] 为每个主题生成 QML 颜色 Singleton（如需要）：
   - `qml/themes/MaterialDark.qml`
   - `qml/themes/MaterialDarker.qml`
   - `qml/themes/MaterialLight.qml`
@@ -179,18 +179,18 @@ Configure each theme in config file, restart app, verify interface matches Klipp
   - `qml/themes/ZBolt.qml`
   - 或使用单一 `KlipperColors.qml` 动态加载
 
-- [ ] T022 [US2] 实现主题切换逻辑在 `ThemeProvider.setTheme()`：
+- [x] T022 [US2] 实现主题切换逻辑在 `ThemeProvider.setTheme()`：
   - 调用 `ThemeManager.loadTheme(new_theme)`
   - 清空图标缓存（`AssetCache.clear()`）
   - 发出 `themeChanged()` 信号
   - 更新所有颜色属性
 
-- [ ] T023 [P] [US2] 添加主题切换 UI 控件（可选，用于测试）：
+- [x] T023 [P] [US2] 添加主题切换 UI 控件（可选，用于测试）：
   - 在设置页面或开发菜单中添加主题选择器
   - 显示所有可用主题
   - 选择后调用 `ThemeProvider.setTheme()`
 
-- [ ] T024 [US2] 验证主题一致性：
+- [x] T024 [US2] 验证主题一致性：
   - 所有 5 个主题的 CSS 解析成功
   - 所有主题的图标路径正确（优先主题图标，回退到基础）
   - 颜色定义完整（color1-4, bg, active, warning, error, text 等）
@@ -210,34 +210,34 @@ Navigate all panels and features, create checklist of used icons, verify each lo
 
 ### 实现任务 / Implementation Tasks
 
-- [ ] T025 [P] [US3] 创建图标清单文档 `docs/icon-inventory.md`：
+- [x] T025 [P] [US3] 创建图标清单文档 `docs/icon-inventory.md`：
   - 列出所有 QtKs UI 使用的图标名称
   - 映射到 KlipperScreen 图标文件
   - 标识缺失或需要回退的图标
 
-- [ ] T026 [P] [US3] 更新所有现有 QML 组件使用 `ThemedIcon`：
+- [x] T026 [P] [US3] 更新所有现有 QML 组件使用 `ThemedIcon`：
   - `qml/components/FunctionIcon.qml` - 替换硬编码路径为 `ThemedIcon`
   - `qml/components/GlobalNavButtons.qml` - 使用 HOME/RETURN 图标
   - `qml/pages/HomePage.qml` - 使用 Widget 图标
   - `qml/components/NavigationButton.qml` - 使用动态图标路径
 
-- [ ] T027 [P] [US3] 实现特殊图标支持：
+- [x] T027 [P] [US3] 实现特殊图标支持：
   - 编号挤出机图标（extruder-0 到 extruder-9）在 `IconLoader`
   - 床位调平位置图标（bed-level-t-l, bed-level-t-r 等）
   - 电池状态图标（battery-0, battery-25, battery-50, battery-75, battery-100, battery-charging, battery-unknown）
   - WiFi 信号强度图标（wifi_excellent, wifi_good, wifi_fair, wifi_poor）
 
-- [ ] T028 [US3] 实现图标回退机制在 `IconLoader.loadIcon()`：
+- [x] T028 [US3] 实现图标回退机制在 `IconLoader.loadIcon()`：
   - 优先级 1: 当前主题图标目录
   - 优先级 2: 基础主题图标目录
   - 优先级 3: 通用占位符图标（创建 `assets/placeholder.svg`）
   - 记录缺失图标警告到日志
 
-- [ ] T029 [P] [US3] 处理 2 个问题 SVG 文件：
+- [x] T029 [P] [US3] 处理 2 个问题 SVG 文件：
   - `spool.svg` (CSS 变量): 创建 `backend/svg_processor.py` 预处理 CSS 变量
   - `spoolman.svg` (clipPath): 使用 Inkscape 转换或创建简化版
 
-- [ ] T030 [US3] 验证所有图标加载：
+- [x] T030 [US3] 验证所有图标加载：
   - 编写脚本扫描所有 QML 文件提取图标名称
   - 验证所有引用的图标在 KlipperScreen/styles 中存在
   - 生成缺失图标报告
@@ -259,42 +259,42 @@ Navigate rapidly between panels, monitor asset load times, verify no placeholder
 
 #### 性能优化 / Performance Optimization
 
-- [ ] T031 [P] [US4] 优化所有 QML Image 组件性能属性：
+- [x] T031 [P] [US4] 优化所有 QML Image 组件性能属性：
   - 添加 `cache: true` 到所有图标 Image
   - 添加 `asynchronous: true` 异步加载
   - 设置 `sourceSize: Qt.size(48, 48)` 限制渲染尺寸
   - 添加 `smooth: true` 高质量缩放
 
-- [ ] T032 [P] [US4] 实现核心图标预加载在 `qml/MainWindow.qml`：
+- [x] T032 [P] [US4] 实现核心图标预加载在 `qml/MainWindow.qml`：
   - `Component.onCompleted` 中预加载 6 个关键图标
   - 图标列表：home, back, files, control, settings, dashboard
   - 使用临时 Image 对象加载到缓存后销毁
 
-- [ ] T033 [US4] 实现延迟加载策略：
+- [x] T033 [US4] 实现延迟加载策略：
   - ListView 中设置 `cacheBuffer: Style.baseUnit * 20`
   - 非首屏图标使用 `Loader { active: visible }`
   - 优先级：首屏 → 第二屏 → 其他
 
 #### 性能监控 / Performance Monitoring
 
-- [ ] T034 [P] [US4] 添加性能日志在 `backend/theme_manager.py`：
+- [x] T034 [P] [US4] 添加性能日志在 `backend/theme_manager.py`：
   - 记录主题加载时间
   - 记录 CSS 解析时间
   - 记录图标扫描时间
 
-- [ ] T035 [P] [US4] 添加性能日志在 `backend/icon_loader.py`：
+- [x] T035 [P] [US4] 添加性能日志在 `backend/icon_loader.py`：
   - 记录图标首次加载时间
   - 记录缓存命中率
   - 警告超过 50ms 的图标加载
 
 #### 缓存优化 / Cache Optimization
 
-- [ ] T036 [US4] 优化 `AssetCache` 性能：
+- [x] T036 [US4] 优化 `AssetCache` 性能：
   - 实现 `_estimate_size()` 准确估算图标内存占用
   - 优化 LRU 淘汰算法（使用 OrderedDict）
   - 添加 `cache_usage_percent` 监控
 
-- [ ] T037 [P] [US4] 验证性能目标达成：
+- [x] T037 [P] [US4] 验证性能目标达成：
   - 图标首次加载 < 50ms（目标：10-30ms）
   - 图标缓存加载 < 5ms（目标：1-3ms）
   - 主题切换 < 3s（目标：< 2s）
@@ -315,22 +315,22 @@ Add custom SVG icon to directory, configure custom panel/macro to use it, verify
 
 ### 实现任务 / Implementation Tasks
 
-- [ ] T038 [P] [US5] 扩展 `ThemeConfiguration` 支持自定义图标：
+- [x] T038 [P] [US5] 扩展 `ThemeConfiguration` 支持自定义图标：
   - 添加 `custom_icons_enabled: bool` 字段
   - 添加 `custom_icons_dir: Optional[Path]` 字段
   - 在 `config.json` 中添加配置选项
 
-- [ ] T039 [US5] 扩展 `IconLoader.loadIcon()` 支持自定义图标：
+- [x] T039 [US5] 扩展 `IconLoader.loadIcon()` 支持自定义图标：
   - 新的回退优先级：自定义图标目录 → 主题图标 → 基础图标 → 占位符
   - 验证自定义图标文件可读性
   - 支持 SVG 和 PNG 格式
 
-- [ ] T040 [P] [US5] 创建自定义图标示例：
+- [x] T040 [P] [US5] 创建自定义图标示例：
   - 创建 `assets/custom_icons/` 目录
   - 添加示例自定义图标 SVG
   - 在 `quickstart.md` 中记录用法
 
-- [ ] T041 [P] [US5] 验证自定义图标功能：
+- [x] T041 [P] [US5] 验证自定义图标功能：
   - 测试自定义 SVG 图标加载
   - 测试自定义 PNG 图标加载（可选）
   - 测试缺失自定义图标的回退
@@ -350,18 +350,18 @@ Run application on different resolutions, verify icons remain sharp and properly
 
 ### 实现任务 / Implementation Tasks
 
-- [ ] T042 [P] [US6] 实现 DPI 感知缩放在 `qml/Style.qml`：
+- [x] T042 [P] [US6] 实现 DPI 感知缩放在 `qml/Style.qml`：
   - 检测显示 DPI（`Screen.pixelDensity`）
   - 调整 `baseUnit` 基于 DPI
   - 计算适当的图标尺寸
 
-- [ ] T043 [P] [US6] 验证 SVG 矢量缩放：
+- [x] T043 [P] [US6] 验证 SVG 矢量缩放：
   - 测试 800x480 分辨率（最小）
   - 测试 1024x600 分辨率（中等）
   - 测试 1920x1080 分辨率（高）
   - 验证图标无像素化
 
-- [ ] T044 [US6] 实现触摸目标尺寸验证：
+- [x] T044 [US6] 实现触摸目标尺寸验证：
   - 确保最小 48x48px 触摸目标
   - 在 `ThemedIcon` 中添加 `minimumTouchSize` 属性
   - 在小分辨率下自动调整
@@ -378,31 +378,31 @@ Final polish and improvements across user stories
 
 ### 错误处理 / Error Handling
 
-- [ ] T045 [P] 实现全面错误处理在 `backend/theme_manager.py`：
+- [x] T045 [P] 实现全面错误处理在 `backend/theme_manager.py`：
   - 自定义异常：`ThemeNotFoundError`, `ThemeLoadError`
   - 优雅降级：缺失主题 → 回退主题
   - 错误日志记录
 
-- [ ] T046 [P] 实现全面错误处理在 `backend/icon_loader.py`：
+- [x] T046 [P] 实现全面错误处理在 `backend/icon_loader.py`：
   - 自定义异常：`IconNotFoundError`
   - 优雅降级：缺失图标 → 占位符
   - 错误日志记录
 
 ### 文档 / Documentation
 
-- [ ] T047 [P] 更新 `quickstart.md` 包含实际实现细节：
+- [x] T047 [P] 更新 `quickstart.md` 包含实际实现细节：
   - 添加安装步骤
   - 添加配置示例
   - 添加故障排除部分
 
-- [ ] T048 [P] 创建图标映射文档 `docs/icon-mapping.md`：
+- [x] T048 [P] 创建图标映射文档 `docs/icon-mapping.md`：
   - KlipperScreen 图标名称 → QtKs 使用位置
   - 特殊图标说明（编号挤出机、电池、WiFi）
   - 自定义图标指南
 
 ### 配置 / Configuration
 
-- [ ] T049 更新 `config.json` 示例配置：
+- [x] T049 更新 `config.json` 示例配置：
   - 添加所有主题配置选项
   - 添加注释说明每个选项
   - 提供默认值
@@ -412,22 +412,22 @@ Final polish and improvements across user stories
 如果需要测试，添加以下任务：
 If tests are needed, add the following tasks:
 
-- [ ] T050 [P] 编写单元测试 `tests/test_css_parser.py`：
+- [x] T050 [P] 编写单元测试 `tests/test_css_parser.py`：
   - 测试 @define-color 解析
   - 测试颜色引用解析
   - 测试 QML 格式转换
 
-- [ ] T051 [P] 编写单元测试 `tests/test_icon_loader.py`：
+- [x] T051 [P] 编写单元测试 `tests/test_icon_loader.py`：
   - 测试图标加载
   - 测试缓存机制
   - 测试回退逻辑
 
-- [ ] T052 [P] 编写单元测试 `tests/test_theme_manager.py`：
+- [x] T052 [P] 编写单元测试 `tests/test_theme_manager.py`：
   - 测试主题加载
   - 测试主题切换
   - 测试错误处理
 
-- [ ] T053 [P] 编写 QML 组件测试 `tests/qml_tests/tst_ThemedIcon.qml`：
+- [x] T053 [P] 编写 QML 组件测试 `tests/qml_tests/tst_ThemedIcon.qml`：
   - 测试图标显示
   - 测试缺失图标回退
   - 测试性能

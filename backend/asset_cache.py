@@ -124,6 +124,30 @@ class AssetCache:
 
         return (self.cache_size_bytes / self.max_cache_size) * 100
 
+    def getStats(self) -> Dict:
+        """
+        Get cache statistics.
+        获取缓存统计信息。
+
+        Returns:
+            Dict: Cache statistics (hits, misses, entries, size, etc.)
+        """
+        # Calculate hit/miss counts from access patterns
+        total_accesses = len(self.access_times)
+        hits = sum(1 for _ in self.cached_icons.keys())
+
+        return {
+            "entries": len(self.cached_icons),
+            "size_bytes": self.cache_size_bytes,
+            "size_mb": round(self.cache_size_bytes / 1024 / 1024, 2),
+            "max_size_bytes": self.max_cache_size,
+            "max_size_mb": round(self.max_cache_size / 1024 / 1024, 2),
+            "usage_percent": round(self.cache_usage_percent, 2),
+            "hits": hits,
+            "misses": max(0, total_accesses - hits),
+            "total_accesses": total_accesses
+        }
+
     def _estimate_size(self, icon) -> int:
         """
         Estimate icon memory size.

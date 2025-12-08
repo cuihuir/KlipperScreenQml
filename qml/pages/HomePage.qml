@@ -177,18 +177,20 @@ Page {
                         }
                     }
 
-                    // 功能图标 2: 校准 (占位)
+                    // 功能图标 2: 校准
                     FunctionIcon {
                         iconId: "calibrate"
                         label: "校准"
                         iconName: "bed-level"  // 使用床调平图标
-                        targetPage: ""  // 占位,暂无目标页面
+                        targetPage: "calibrate"  // 指向校准菜单页
                         Layout.fillWidth: true
                         Layout.fillHeight: true
 
                         onIconClicked: (iconId, targetPage) => {
-                            console.log("校准功能待实现")
-                            // 占位功能,暂不跳转
+                            var appWindow = root.Window.window
+                            if (appWindow && appWindow.pageRegistry) {
+                                appWindow.pageRegistry.navigateTo(targetPage)
+                            }
                         }
                     }
 

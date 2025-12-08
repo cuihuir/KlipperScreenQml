@@ -1,0 +1,519 @@
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import ".."
+import "../components"
+
+/**
+ * HomePage - 主页
+ *
+ * 显示常用功能 Widget 和功能入口图标。
+ * 布局: 左侧 60% 显示 4 个 Widget，右侧 40% 显示功能图标网格。
+ *
+ * 此页面是导航栈的根页面（root），用户总是可以通过 HOME 按钮返回此页面。
+ *
+ * Widget 区域（左侧）:
+ * - 温度 Widget（热端/热床）
+ * - 风扇 Widget（打印冷却）
+ * - LED Widget（仓灯）
+ * - 打印控制 Widget（开始/暂停/取消）
+ *
+ * 功能图标区域（右侧）:
+ * - 设置、控制、文件、AFC、移动、更多等功能入口
+ *
+ * 使用示例:
+ *   StackView {
+ *       initialItem: HomePage { }
+ *   }
+ */
+Page {
+    id: root
+
+    // ===== 页面属性 =====
+
+    /**
+     * StackView 引用（用于导航）
+     */
+    property StackView stackView: StackView.view
+
+    /**
+     * 打印状态数据
+     */
+    property string printState: "standby"
+    property real printProgress: 0.0
+    property string printFileName: ""
+
+    // ===== 数据绑定 =====
+    Connections {
+        target: app ? app.printer : null
+
+        function onPrinterStateChanged(state) {
+            root.printState = state
+        }
+
+        function onPrintProgressChanged(data) {
+            root.printProgress = data.progress || 0.0
+            root.printFileName = data.filename || ""
+        }
+    }
+
+    // ===== 页面背景 =====
+    background: Rectangle {
+        color: Style.bgPrimary
+    }
+
+    // ===== 主布局 =====
+    RowLayout {
+        anchors.fill: parent
+        anchors.margins: Style.spacingLarge
+        spacing: Style.spacingLarge
+
+        // ===== 左侧：Widget 区域（60%） =====
+        Rectangle {
+            Layout.fillHeight: true
+            Layout.preferredWidth: 950
+            color: Style.bgSecondary
+            radius: Style.radiusSmall
+
+            // 2x2 网格布局
+            GridLayout {
+                anchors.fill: parent
+                anchors.margins: Style.spacingMedium
+                columns: 2
+                rows: 2
+                columnSpacing: Style.spacingMedium
+                rowSpacing: Style.spacingMedium
+
+                // Widget 1: 温度显示（热端）
+                TempWidget {
+                    widgetId: "temp_hotend"
+                    heaterName: "热端"
+                    heaterType: "extruder"
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                }
+
+                // Widget 2: 温度显示（热床）
+                TempWidget {
+                    widgetId: "temp_bed"
+                    heaterName: "热床"
+                    heaterType: "bed"
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                }
+
+                // Widget 3: 风扇控制
+                FanWidget {
+                    widgetId: "fan_part_cooling"
+                    fanName: "冷却风扇"
+                    fanSpeed: 0.0  // TODO: Phase 5 - 绑定到真实数据
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                }
+
+                // Widget 4: LED 控制
+                LedWidget {
+                    widgetId: "led_chamber"
+                    ledName: "仓灯"
+                    ledBrightness: 0.0  // TODO: Phase 5 - 绑定到真实数据
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                }
+            }
+        }
+
+        // ===== 分隔线（增强视觉效果）=====
+        Rectangle {
+            Layout.fillHeight: true
+            Layout.preferredWidth: Style.borderMedium
+            color: Style.border
+
+            // 添加阴影效果
+            Rectangle {
+                anchors.left: parent.right
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                width: Style.borderThin
+                color: Qt.rgba(0, 0, 0, 0.1)
+            }
+        }
+
+        // ===== 右侧：功能区域（40%） =====
+        Item {
+            Layout.fillHeight: true
+            Layout.fillWidth: true  // Fill remaining space
+
+            ColumnLayout {
+                anchors.fill: parent
+                spacing: Style.spacingMedium
+
+                // ===== 上部区域（60%）：打印控制 =====
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: parent.height * 0.6
+                    color: Style.bgSecondary
+                    radius: Style.radiusSmall
+                    border.width: Style.borderThin
+                    border.color: Style.border
+
+                    ColumnLayout {
+                        anchors.fill: parent
+                        anchors.margins: Style.spacingMedium
+                        spacing: Style.spacingMedium
+
+                        // 打印信息和进度条（可点击进入详情页）
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: Style.spacingSmall
+                            visible: root.printState === "printing" || root.printState === "paused"
+
+                            // 信息显示区域（可点击）
+                            Item {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 100
+
+                                // 点击进入JobStatusPage
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        var appWindow = root.Window.window
+                                        if (appWindow && appWindow.pageRegistry) {
+                                            appWindow.pageRegistry.navigateTo("job_status")
+                                        }
+                                    }
+                                }
+
+                                ColumnLayout {
+                                    anchors.fill: parent
+                                    spacing: Style.spacingSmall
+
+                                    // 标题行
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: Style.spacingSmall
+
+                                        Label {
+                                            text: "打印控制"
+                                            font.pixelSize: Style.fontSizeLarge
+                                            font.bold: true
+                                        }
+
+                                        // 状态指示器
+                                        Rectangle {
+                                            width: 12
+                                            height: 12
+                                            radius: 6
+                                            color: root.printState === "printing" ? Style.accentPrimary : "#FF9800"
+
+                                            // 闪烁动画
+                                            SequentialAnimation on opacity {
+                                                running: root.printState === "printing"
+                                                loops: Animation.Infinite
+                                                NumberAnimation { to: 0.3; duration: 1000 }
+                                                NumberAnimation { to: 1.0; duration: 1000 }
+                                            }
+                                        }
+
+                                        Label {
+                                            text: root.printState === "printing" ? "打印中" : "已暂停"
+                                            font.pixelSize: Style.fontSizeSmall
+                                            color: root.printState === "printing" ? Style.accentPrimary : "#FF9800"
+                                            font.bold: true
+                                        }
+
+                                        Item { Layout.fillWidth: true }
+                                    }
+
+                                    Label {
+                                        id: fileLabel
+                                        text: root.printFileName || "未知文件"
+                                        font.pixelSize: Style.fontSizeSmall
+                                        opacity: 0.7
+                                        elide: Text.ElideMiddle
+                                        Layout.fillWidth: true
+                                    }
+
+                                    // 进度条
+                                    ProgressBar {
+                                        id: progressBar
+                                        Layout.fillWidth: true
+                                        value: root.printProgress
+
+                                        background: Rectangle {
+                                            implicitHeight: 12
+                                            color: Style.bgTertiary
+                                            radius: 6
+                                        }
+
+                                        contentItem: Item {
+                                            implicitHeight: 12
+                                            Rectangle {
+                                                width: progressBar.visualPosition * parent.width
+                                                height: parent.height
+                                                radius: 6
+                                                color: Style.accentPrimary
+
+                                                // 光泽效果
+                                                Rectangle {
+                                                    anchors.top: parent.top
+                                                    anchors.left: parent.left
+                                                    anchors.right: parent.right
+                                                    height: parent.height * 0.4
+                                                    radius: 6
+                                                    color: Qt.rgba(1, 1, 1, 0.2)
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    Label {
+                                        text: Math.round(progressBar.value * 100) + "%"
+                                        font.pixelSize: Style.fontSizeMedium
+                                        font.bold: true
+                                        Layout.alignment: Qt.AlignRight
+                                    }
+                                }
+                            }
+                        }
+
+                        // 空闲状态显示
+                        Label {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            visible: root.printState !== "printing" && root.printState !== "paused"
+                            text: "打印空闲"
+                            font.pixelSize: Style.fontSizeXLarge
+                            opacity: 0.5
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+
+                        // 三个控制按钮
+                        RowLayout {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            spacing: Style.spacingMedium
+                            visible: root.printState === "printing" || root.printState === "paused"
+
+                            // 暂停/继续按钮
+                            Button {
+                                id: pauseResumeButton
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+
+                                background: Rectangle {
+                                    color: pauseResumeButton.pressed ? Qt.darker("#4CAF50", 1.2) : "#4CAF50"
+                                    radius: Style.radiusSmall
+                                    border.width: 2
+                                    border.color: pauseResumeButton.hovered ? Qt.lighter("#4CAF50", 1.1) : "transparent"
+
+                                    // 渐变效果
+                                    gradient: Gradient {
+                                        GradientStop { position: 0.0; color: Qt.lighter(pauseResumeButton.pressed ? Qt.darker("#4CAF50", 1.2) : "#4CAF50", 1.1) }
+                                        GradientStop { position: 1.0; color: pauseResumeButton.pressed ? Qt.darker("#4CAF50", 1.2) : "#4CAF50" }
+                                    }
+                                }
+
+                                contentItem: ColumnLayout {
+                                    spacing: 2
+
+                                    Text {
+                                        text: root.printState === "paused" ? "▶" : "⏸"
+                                        font.pixelSize: Style.fontSizeXLarge
+                                        color: "white"
+                                        Layout.alignment: Qt.AlignHCenter
+                                    }
+
+                                    Text {
+                                        text: root.printState === "paused" ? "恢复" : "暂停"
+                                        font.pixelSize: Style.fontSizeMedium
+                                        font.bold: true
+                                        color: "white"
+                                        Layout.alignment: Qt.AlignHCenter
+                                    }
+                                }
+
+                                onClicked: {
+                                    if (app && app.printer) {
+                                        if (root.printState === "paused") {
+                                            app.printer.resumePrint()
+                                        } else if (root.printState === "printing") {
+                                            app.printer.pausePrint()
+                                        }
+                                    }
+                                }
+                            }
+
+                            // 跳过按钮（未来功能）
+                            Button {
+                                id: skipButton
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                                enabled: false
+
+                                background: Rectangle {
+                                    color: Style.bgTertiary
+                                    radius: Style.radiusSmall
+                                    opacity: 0.5
+                                }
+
+                                contentItem: ColumnLayout {
+                                    spacing: 2
+
+                                    Text {
+                                        text: "⏭"
+                                        font.pixelSize: Style.fontSizeXLarge
+                                        color: Style.textSecondary
+                                        Layout.alignment: Qt.AlignHCenter
+                                    }
+
+                                    Text {
+                                        text: "跳过"
+                                        font.pixelSize: Style.fontSizeMedium
+                                        font.bold: true
+                                        color: Style.textSecondary
+                                        Layout.alignment: Qt.AlignHCenter
+                                    }
+                                }
+                            }
+
+                            // 取消按钮
+                            Button {
+                                id: cancelButton
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+
+                                background: Rectangle {
+                                    color: cancelButton.pressed ? Qt.darker("#F44336", 1.2) : "#F44336"
+                                    radius: Style.radiusSmall
+                                    border.width: 2
+                                    border.color: cancelButton.hovered ? Qt.lighter("#F44336", 1.1) : "transparent"
+
+                                    // 渐变效果
+                                    gradient: Gradient {
+                                        GradientStop { position: 0.0; color: Qt.lighter(cancelButton.pressed ? Qt.darker("#F44336", 1.2) : "#F44336", 1.1) }
+                                        GradientStop { position: 1.0; color: cancelButton.pressed ? Qt.darker("#F44336", 1.2) : "#F44336" }
+                                    }
+                                }
+
+                                contentItem: ColumnLayout {
+                                    spacing: 2
+
+                                    Text {
+                                        text: "✕"
+                                        font.pixelSize: Style.fontSizeXLarge
+                                        color: "white"
+                                        Layout.alignment: Qt.AlignHCenter
+                                    }
+
+                                    Text {
+                                        text: "取消"
+                                        font.pixelSize: Style.fontSizeMedium
+                                        font.bold: true
+                                        color: "white"
+                                        Layout.alignment: Qt.AlignHCenter
+                                    }
+                                }
+
+                                onClicked: {
+                                    if (app && app.printer) {
+                                        app.printer.cancelPrint()
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // ===== 下部区域（40%）：4个图标横向排列 =====
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    spacing: Style.spacingMedium
+
+                    // 功能图标 1: 设置
+                    FunctionIcon {
+                        iconId: "settings"
+                        label: "设置"
+                        iconName: "settings"
+                        targetPage: "settings"
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+
+                        onIconClicked: (iconId, targetPage) => {
+                            var appWindow = root.Window.window
+                            if (appWindow && appWindow.pageRegistry) {
+                                appWindow.pageRegistry.navigateTo(targetPage)
+                            }
+                        }
+                    }
+
+                    // 功能图标 2: 控制 (使用 fine-tune 图标，代表精细调整)
+                    FunctionIcon {
+                        iconId: "control"
+                        label: "控制"
+                        iconName: "fine-tune"  // KlipperScreen 无 control.svg，使用 fine-tune.svg
+                        targetPage: "control"
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+
+                        onIconClicked: (iconId, targetPage) => {
+                            var appWindow = root.Window.window
+                            if (appWindow && appWindow.pageRegistry) {
+                                appWindow.pageRegistry.navigateTo(targetPage)
+                            }
+                        }
+                    }
+
+                    // 功能图标 3: 移动 (XYZ轴移动)
+                    FunctionIcon {
+                        iconId: "move"
+                        label: "移动"
+                        iconName: "move"
+                        targetPage: "move"
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+
+                        onIconClicked: (iconId, targetPage) => {
+                            var appWindow = root.Window.window
+                            if (appWindow && appWindow.pageRegistry) {
+                                appWindow.pageRegistry.navigateTo(targetPage)
+                            }
+                        }
+                    }
+
+                    // 功能图标 4: 文件
+                    FunctionIcon {
+                        iconId: "files"
+                        label: "文件"
+                        iconName: "files"
+                        targetPage: "files"
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+
+                        onIconClicked: (iconId, targetPage) => {
+                            var appWindow = root.Window.window
+                            if (appWindow && appWindow.pageRegistry) {
+                                appWindow.pageRegistry.navigateTo(targetPage)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // ===== 生命周期钩子 =====
+    StackView.onActivated: {
+        console.log("HomePage activated")
+    }
+
+    StackView.onDeactivated: {
+        console.log("HomePage deactivated")
+    }
+
+    Component.onCompleted: {
+        console.log("HomePage created, stackView:", stackView)
+    }
+}

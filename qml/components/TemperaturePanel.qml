@@ -4,14 +4,19 @@ import QtQuick.Layouts
 import ".."
 
 // Metro风格温度面板
-Rectangle {
+Item {
     id: root
 
     property var printer: null
 
     signal temperatureEditRequested(string title, var callback)
 
-    color: "transparent"
+    // 阻止点击穿透到底层
+    MouseArea {
+        anchors.fill: parent
+        onPressed: mouse.accepted = false  // 让子组件响应点击
+        preventStealing: true
+    }
 
     ColumnLayout {
         anchors.fill: parent

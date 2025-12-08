@@ -1,101 +1,92 @@
+// Confirm Dialog Component
+// 确认对话框组件
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import "."
+import QtQuick.Controls.Material
+import ".."
 
-Popup {
+Dialog {
     id: root
 
-    // Dialog properties
-    property string title: "确认操作"
-    property string message: "确定要执行此操作吗？"
+    // Public properties
+    property string dialogTitle: "确认"
+    property string dialogMessage: "确定要执行此操作吗？"
     property string confirmText: "确定"
     property string cancelText: "取消"
-    property var onConfirmed: function() {}
 
-    // Show in center of screen
-    x: (parent.width - width) / 2
-    y: (parent.height - height) / 2
+    // Note: accepted/rejected signals already exist in Dialog
 
-    // Metro style dialog
-    width: Math.min(parent.width * 0.9, 500)
-    height: Math.min(parent.height * 0.8, 300)
     modal: true
-    closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+    anchors.centerIn: parent
+    width: Math.min(parent.width * 0.8, 400)
+    title: dialogTitle
 
-    // Dark background overlay
-    Rectangle {
-        anchors.fill: parent
+    Material.background: Style.bgCard
+
+    header: Rectangle {
         color: Style.bgCard
-        border.width: 2
-        border.color: Style.accent
-        radius: Style.radiusSmall
+        height: 60
 
-        // Content layout
-        ColumnLayout {
-            anchors.fill: parent
-            anchors.margins: Style.spacingLarge
-            spacing: Style.spacingLarge
-
-            // Title
-            Label {
-                Layout.fillWidth: true
-                text: root.title
-                font.pixelSize: Style.fontLarge
-                font.family: Style.fontFamily
-                font.bold: true
-                color: Style.textPrimary
-                wrapMode: Text.WordWrap
-            }
-
-            // Message
-            Label {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                text: root.message
-                font.pixelSize: Style.fontNormal
-                font.family: Style.fontFamily
-                color: Style.textSecondary
-                wrapMode: Text.WordWrap
-                verticalAlignment: Text.AlignVCenter
-            }
-
-            // Buttons
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Style.spacingMedium
-
-                // Cancel button (secondary)
-                MetroButton {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 60
-                    text: root.cancelText
-                    backgroundColor: Style.bgSecondary
-                    textColor: Style.textPrimary
-                    onClicked: root.close()
-                }
-
-                // Confirm button (primary)
-                MetroButton {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 60
-                    text: root.confirmText
-                    backgroundColor: Style.accent
-                    textColor: Style.bgPrimary
-                    onClicked: {
-                        root.onConfirmed()
-                        root.close()
-                    }
-                }
-            }
+        Label {
+            anchors.centerIn: parent
+            text: root.dialogTitle
+            font.pixelSize: 18
+            font.bold: true
+            color: Material.accent
         }
     }
 
-    // Show function
-    function show(titleText: string, messageText: string, confirmCallback: function) {
-        root.title = titleText
-        root.message = messageText
-        root.onConfirmed = confirmCallback || function() {}
-        root.open()
+    contentItem: Rectangle {
+        color: Style.bgCard
+        implicitHeight: messageLabel.height + 40
+
+        Label {
+            id: messageLabel
+            anchors.centerIn: parent
+            width: parent.width - 40
+            text: root.dialogMessage
+            font.pixelSize: 14
+            color: Style.textPrimary
+            wrapMode: Text.Wrap
+            horizontalAlignment: Text.AlignHCenter
+        }
+    }
+
+    footer: Rectangle {
+        color: Style.bgCard
+        height: 80
+
+        RowLayout {
+            anchors.fill: parent
+            anchors.margins: 15
+            spacing: 15
+
+            // Cancel button
+            Button {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 50
+                text: root.cancelText
+                font.pixelSize: 14
+                Material.background: Style.bgSecondary
+                onClicked: {
+                    root.rejected()
+                    root.close()
+                }
+            }
+
+            // Confirm button
+            Button {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 50
+                text: root.confirmText
+                font.pixelSize: 14
+                Material.background: Material.accent
+                onClicked: {
+                    root.accepted()
+                    root.close()
+                }
+            }
+        }
     }
 }

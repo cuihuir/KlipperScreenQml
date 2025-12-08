@@ -76,12 +76,11 @@ Rectangle {
                 }
             }
 
-            // HOME 图标（居中）
-            Text {
+            // HOME 图标（居中） - 使用 KlipperScreen SVG
+            ThemedIcon {
                 anchors.centerIn: parent
-                text: "🏠"
-                font.pixelSize: Style.fontXLarge
-                font.family: Style.fontFamily
+                iconName: "home"
+                iconSize: Style.fontXLarge
             }
 
             // 鼠标交互
@@ -151,14 +150,12 @@ Rectangle {
                 }
             }
 
-            // "<" 返回图标
-            Text {
+            // 返回图标 - 使用 KlipperScreen SVG
+            ThemedIcon {
                 anchors.centerIn: parent
-                text: "<"
-                font.pixelSize: Style.fontXXLarge
-                font.family: Style.fontFamily
-                font.bold: true
-                color: parent.enabled ? Style.bgPrimary : Style.textDisabled
+                iconName: "arrow-left"
+                iconSize: Style.fontXXLarge
+                opacity: parent.enabled ? 1.0 : 0.4
             }
 
             // 鼠标交互

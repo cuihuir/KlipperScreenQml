@@ -136,14 +136,14 @@ HomeWidget {
     // ===== 温度编辑键盘弹出层 =====
     Popup {
         id: tempKeypadPopup
-        modal: false  // 非模态，允许用户点击其他区域关闭
-        dim: true      // 显示半透明背景
+        modal: true   // 模态弹窗，阻止底层点击
+        dim: true     // 显示半透明背景
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
         // 居中显示
         anchors.centerIn: Overlay.overlay
-        width: Style.baseUnit * 25
-        height: Style.baseUnit * 35
+        width: Style.windowWidth * 0.6  // 占据屏幕宽度的 60%
+        height: Style.baseUnit * 40  // 增大高度以容纳更大的按键
 
         // 处理键盘可见性变化
         onVisibleChanged: {
