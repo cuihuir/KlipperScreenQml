@@ -47,7 +47,7 @@ Page {
 
                 Label {
                     text: (printer ? printer.zOffset.toFixed(3) : "0.000") + " mm"
-                    font.pixelSize: Style.fontXXXLarge
+                    font.pixelSize: Style.fontXXLarge
                     font.family: Style.fontFamilyMono
                     font.bold: true
                     color: Style.warning

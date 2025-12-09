@@ -416,7 +416,7 @@ Page {
 
                             Label {
                                 text: Math.round(extruderTemp) + "°C"
-                                font.pixelSize: Style.fontXXXLarge
+                                font.pixelSize: Style.fontXXLarge
                                 font.bold: true
                                 font.family: Style.fontFamilyMono
                                 color: Style.getTempColor(extruderTemp, extruderTarget)
@@ -462,7 +462,7 @@ Page {
 
                             Label {
                                 text: Math.round(bedTemp) + "°C"
-                                font.pixelSize: Style.fontXXXLarge
+                                font.pixelSize: Style.fontXXLarge
                                 font.bold: true
                                 font.family: Style.fontFamilyMono
                                 color: Style.getTempColor(bedTemp, bedTarget)

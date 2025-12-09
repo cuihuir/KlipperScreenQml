@@ -48,7 +48,7 @@ Page {
 
                     Components.ThemedIcon {
                         iconName: "bed-level"
-                        iconSize: Style.fontXXXLarge * 1.5
+                        iconSize: Style.fontXXLarge * 1.5
                         Layout.alignment: Qt.AlignHCenter
                     }
 
@@ -89,7 +89,7 @@ Page {
 
                     Components.ThemedIcon {
                         iconName: "arrow-up"
-                        iconSize: Style.fontXXXLarge * 1.5
+                        iconSize: Style.fontXXLarge * 1.5
                         Layout.alignment: Qt.AlignHCenter
                     }
 
@@ -130,7 +130,7 @@ Page {
 
                     Components.ThemedIcon {
                         iconName: "grid"
-                        iconSize: Style.fontXXXLarge * 1.5
+                        iconSize: Style.fontXXLarge * 1.5
                         Layout.alignment: Qt.AlignHCenter
                     }
 
@@ -171,7 +171,7 @@ Page {
 
                     Components.ThemedIcon {
                         iconName: "settings"
-                        iconSize: Style.fontXXXLarge * 1.5
+                        iconSize: Style.fontXXLarge * 1.5
                         Layout.alignment: Qt.AlignHCenter
                     }
 
