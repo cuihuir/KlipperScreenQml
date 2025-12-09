@@ -66,7 +66,7 @@ Page {
                     // 当前值显示
                     Label {
                         text: (printer ? Math.round(printer.speedFactor * 100) : 100) + "%"
-                        font.pixelSize: Style.fontXXXLarge
+                        font.pixelSize: Style.fontXXLarge
                         font.family: Style.fontFamilyMono
                         font.bold: true
                         color: Style.accent
@@ -195,7 +195,7 @@ Page {
 
                     Label {
                         text: (printer ? Math.round(printer.extrudeFactor * 100) : 100) + "%"
-                        font.pixelSize: Style.fontXXXLarge
+                        font.pixelSize: Style.fontXXLarge
                         font.family: Style.fontFamilyMono
                         font.bold: true
                         color: Style.success
@@ -321,7 +321,7 @@ Page {
                     Label {
                         id: fanSpeedLabel
                         text: "0%"
-                        font.pixelSize: Style.fontXXXLarge
+                        font.pixelSize: Style.fontXXLarge
                         font.family: Style.fontFamilyMono
                         font.bold: true
                         color: Style.info
@@ -453,7 +453,7 @@ Page {
                     Label {
                         id: zOffsetLabel
                         text: (printer ? printer.zOffset.toFixed(3) : "0.000") + " mm"
-                        font.pixelSize: Style.fontXXXLarge
+                        font.pixelSize: Style.fontXXLarge
                         font.family: Style.fontFamilyMono
                         font.bold: true
                         color: Style.warning
