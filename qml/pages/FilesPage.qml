@@ -482,12 +482,14 @@ Page {
 
                                     Image {
                                         anchors.centerIn: parent
-                                        width: parent.width - Style.spacingSmall * 2
-                                        height: parent.height - Style.spacingSmall * 2
+                                        // 最大尺寸限制，但不强制放大小图片
                                         source: model.thumbnail
                                         fillMode: Image.PreserveAspectFit
                                         asynchronous: true
                                         cache: false
+                                        // 设置最大尺寸，如果原图较小则保持原始尺寸
+                                        sourceSize.width: parent.width - Style.spacingSmall * 2
+                                        sourceSize.height: parent.height - Style.spacingSmall * 2
 
                                         // 占位符图标
                                         Components.ThemedIcon {
