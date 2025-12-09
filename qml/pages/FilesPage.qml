@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import ".."
-import "../components"
+import "../components" as Components
 
 // Metro风格文件页 - 2行4列大图标网格布局
 Page {
@@ -126,7 +126,7 @@ Page {
             Layout.fillHeight: true
             spacing: Style.spacingLarge
 
-            // 顶部工具栏
+            // 顶部工具栏 - 第一行：标题 + 排序按钮平铺
             RowLayout {
                 Layout.fillWidth: true
                 spacing: Style.spacingMedium
@@ -140,9 +140,149 @@ Page {
                     color: Style.textPrimary
                 }
 
-                // 搜索框
+                // 排序按钮 - 名称
                 Rectangle {
-                    Layout.preferredWidth: 250
+                    Layout.preferredWidth: Style.baseUnit * 12
+                    Layout.preferredHeight: Style.buttonHeight
+                    color: sortBy === "name" ? Style.accent : Style.bgSecondary
+                    radius: Style.radiusSmall
+                    border.width: Style.borderMedium
+                    border.color: sortBy === "name" ? Style.accent : Style.border
+
+                    RowLayout {
+                        anchors.centerIn: parent
+                        spacing: Style.spacingSmall
+
+                        Label {
+                            text: "名称"
+                            font.pixelSize: Style.fontMedium
+                            font.family: Style.fontFamily
+                            font.bold: true
+                            color: sortBy === "name" ? Style.bgPrimary : Style.textPrimary
+                        }
+
+                        Components.ThemedIcon {
+                            iconName: sortAscending ? "arrow-up" : "arrow-down"
+                            iconSize: Style.fontMedium
+                            visible: sortBy === "name"
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            if (sortBy === "name") {
+                                sortAscending = !sortAscending
+                            } else {
+                                sortBy = "name"
+                                sortAscending = true
+                            }
+                            applyFiltersAndSort()
+                        }
+                    }
+                }
+
+                // 排序按钮 - 日期
+                Rectangle {
+                    Layout.preferredWidth: Style.baseUnit * 12
+                    Layout.preferredHeight: Style.buttonHeight
+                    color: sortBy === "modified" ? Style.info : Style.bgSecondary
+                    radius: Style.radiusSmall
+                    border.width: Style.borderMedium
+                    border.color: sortBy === "modified" ? Style.info : Style.border
+
+                    RowLayout {
+                        anchors.centerIn: parent
+                        spacing: Style.spacingSmall
+
+                        Label {
+                            text: "日期"
+                            font.pixelSize: Style.fontMedium
+                            font.family: Style.fontFamily
+                            font.bold: true
+                            color: sortBy === "modified" ? Style.bgPrimary : Style.textPrimary
+                        }
+
+                        Components.ThemedIcon {
+                            iconName: sortAscending ? "arrow-up" : "arrow-down"
+                            iconSize: Style.fontMedium
+                            visible: sortBy === "modified"
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            if (sortBy === "modified") {
+                                sortAscending = !sortAscending
+                            } else {
+                                sortBy = "modified"
+                                sortAscending = false  // 默认降序（最新优先）
+                            }
+                            applyFiltersAndSort()
+                        }
+                    }
+                }
+
+                // 排序按钮 - 大小
+                Rectangle {
+                    Layout.preferredWidth: Style.baseUnit * 12
+                    Layout.preferredHeight: Style.buttonHeight
+                    color: sortBy === "size" ? Style.success : Style.bgSecondary
+                    radius: Style.radiusSmall
+                    border.width: Style.borderMedium
+                    border.color: sortBy === "size" ? Style.success : Style.border
+
+                    RowLayout {
+                        anchors.centerIn: parent
+                        spacing: Style.spacingSmall
+
+                        Label {
+                            text: "大小"
+                            font.pixelSize: Style.fontMedium
+                            font.family: Style.fontFamily
+                            font.bold: true
+                            color: sortBy === "size" ? Style.bgPrimary : Style.textPrimary
+                        }
+
+                        Components.ThemedIcon {
+                            iconName: sortAscending ? "arrow-up" : "arrow-down"
+                            iconSize: Style.fontMedium
+                            visible: sortBy === "size"
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            if (sortBy === "size") {
+                                sortAscending = !sortAscending
+                            } else {
+                                sortBy = "size"
+                                sortAscending = false  // 默认降序（最大优先）
+                            }
+                            applyFiltersAndSort()
+                        }
+                    }
+                }
+
+                // 分页信息
+                Label {
+                    text: totalPages > 0 ? "第 " + (currentPage + 1) + " / " + totalPages + " 页 (" + allFiles.length + " 文件)" : ""
+                    font.pixelSize: Style.fontSmall
+                    font.family: Style.fontFamily
+                    color: Style.textSecondary
+                    visible: totalPages > 1
+                }
+
+                Item { Layout.fillWidth: true }
+
+                // 搜索框 - 只读显示，点击弹出键盘
+                Rectangle {
+                    Layout.preferredWidth: 280
                     Layout.preferredHeight: Style.buttonHeight
                     color: Style.bgSecondary
                     radius: Style.radiusSmall
@@ -160,20 +300,14 @@ Page {
                             Layout.alignment: Qt.AlignVCenter
                         }
 
-                        TextField {
-                            id: searchField
+                        Label {
+                            id: searchDisplay
                             Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            placeholderText: "Search files..."
+                            text: searchText || "搜索文件..."
                             font.pixelSize: Style.fontNormal
                             font.family: Style.fontFamily
-                            color: Style.textPrimary
-                            background: Rectangle { color: "transparent" }
-
-                            onTextChanged: {
-                                searchText = text
-                                applyFiltersAndSort()
-                            }
+                            color: searchText ? Style.textPrimary : Style.textDisabled
+                            elide: Text.ElideRight
                         }
 
                         // 清除按钮
@@ -181,109 +315,26 @@ Page {
                             text: "✕"
                             font.pixelSize: Style.fontMedium
                             color: Style.textSecondary
-                            visible: searchField.text.length > 0
+                            visible: searchText.length > 0
                             Layout.alignment: Qt.AlignVCenter
 
                             MouseArea {
                                 anchors.fill: parent
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: searchField.text = ""
+                                onClicked: {
+                                    searchText = ""
+                                    applyFiltersAndSort()
+                                }
                             }
-                        }
-                    }
-                }
-
-                // 排序按钮
-                Rectangle {
-                    Layout.preferredWidth: Style.baseUnit * 11
-                    Layout.preferredHeight: Style.buttonHeight
-                    color: Style.bgSecondary
-                    radius: Style.radiusSmall
-                    border.width: Style.borderThin
-                    border.color: Style.border
-
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.margins: Style.spacingSmall
-                        spacing: Style.spacingSmall
-
-                        ThemedIcon {
-                            iconName: sortAscending ? "arrow-up" : "arrow-down"
-                            iconSize: Style.fontMedium
-                            Layout.alignment: Qt.AlignVCenter
-                        }
-
-                        Label {
-                            text: sortBy === "name" ? "Name" : (sortBy === "modified" ? "Date" : "Size")
-                            font.pixelSize: Style.fontSmall
-                            font.family: Style.fontFamily
-                            color: Style.textPrimary
-                            Layout.alignment: Qt.AlignVCenter
                         }
                     }
 
                     MouseArea {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: sortMenu.open()
-                    }
-
-                    // 排序菜单
-                    Menu {
-                        id: sortMenu
-                        y: parent.height
-
-                        MenuItem {
-                            text: "Sort by Name " + (sortBy === "name" ? (sortAscending ? "↑" : "↓") : "")
-                            onTriggered: {
-                                if (sortBy === "name") {
-                                    sortAscending = !sortAscending
-                                } else {
-                                    sortBy = "name"
-                                    sortAscending = true
-                                }
-                                applyFiltersAndSort()
-                            }
-                        }
-
-                        MenuItem {
-                            text: "Sort by Date " + (sortBy === "modified" ? (sortAscending ? "↑" : "↓") : "")
-                            onTriggered: {
-                                if (sortBy === "modified") {
-                                    sortAscending = !sortAscending
-                                } else {
-                                    sortBy = "modified"
-                                    sortAscending = false  // 默认降序（最新优先）
-                                }
-                                applyFiltersAndSort()
-                            }
-                        }
-
-                        MenuItem {
-                            text: "Sort by Size " + (sortBy === "size" ? (sortAscending ? "↑" : "↓") : "")
-                            onTriggered: {
-                                if (sortBy === "size") {
-                                    sortAscending = !sortAscending
-                                } else {
-                                    sortBy = "size"
-                                    sortAscending = false  // 默认降序（最大优先）
-                                }
-                                applyFiltersAndSort()
-                            }
-                        }
+                        onClicked: searchKeyboardPopup.open()
                     }
                 }
-
-                // 分页信息
-                Label {
-                    text: totalPages > 0 ? "Page " + (currentPage + 1) + " / " + totalPages + " (" + allFiles.length + " files)" : ""
-                    font.pixelSize: Style.fontSmall
-                    font.family: Style.fontFamily
-                    color: Style.textSecondary
-                    visible: totalPages > 1
-                }
-
-                Item { Layout.fillWidth: true }
 
                 // 刷新按钮
                 Rectangle {
@@ -294,7 +345,7 @@ Page {
                     border.color: Style.divider
 
                     // 旋转动画图标
-                    ThemedIcon {
+                    Components.ThemedIcon {
                         anchors.centerIn: parent
                         iconName: "refresh"
                         iconSize: Style.fontXLarge
@@ -432,7 +483,7 @@ Page {
                                         cache: false
 
                                         // 占位符图标
-                                        ThemedIcon {
+                                        Components.ThemedIcon {
                                             anchors.centerIn: parent
                                             iconName: "files"
                                             iconSize: Style.baseUnit * 4
@@ -523,7 +574,7 @@ Page {
                     anchors.centerIn: parent
                     spacing: Style.spacingSmall
 
-                    ThemedIcon {
+                    Components.ThemedIcon {
                         Layout.alignment: Qt.AlignHCenter
                         iconName: "arrow-left"
                         iconSize: Style.baseUnit * 5
@@ -594,7 +645,7 @@ Page {
                         color: currentPage < totalPages - 1 ? Style.bgPrimary : Style.textDisabled
                     }
 
-                    ThemedIcon {
+                    Components.ThemedIcon {
                         Layout.alignment: Qt.AlignHCenter
                         iconName: "arrow-right"
                         iconSize: Style.baseUnit * 5
@@ -1315,6 +1366,65 @@ Page {
                 } catch (e) {
                     console.error("Failed to parse metadata for dialog:", e)
                 }
+            }
+        }
+    }
+
+    // 搜索键盘弹出层
+    Popup {
+        id: searchKeyboardPopup
+        modal: true
+        dim: true
+        closePolicy: Popup.CloseOnEscape
+        anchors.centerIn: Overlay.overlay
+        width: Style.windowWidth * 0.7
+        height: Style.baseUnit * 35
+
+        enter: Transition {
+            NumberAnimation {
+                property: "opacity"
+                from: 0.0
+                to: 1.0
+                duration: Style.durationFast
+                easing.type: Easing.OutCubic
+            }
+            NumberAnimation {
+                property: "scale"
+                from: 0.9
+                to: 1.0
+                duration: Style.durationFast
+                easing.type: Easing.OutBack
+            }
+        }
+
+        exit: Transition {
+            NumberAnimation {
+                property: "opacity"
+                from: 1.0
+                to: 0.0
+                duration: Style.durationFast
+                easing.type: Easing.InCubic
+            }
+        }
+
+        Components.QwertyKeyboard {
+            anchors.fill: parent
+            title: "搜索文件"
+            inputValue: searchText
+
+            onTextChanged: (value) => {
+                searchText = value
+                applyFiltersAndSort()
+            }
+
+            onConfirmed: (value) => {
+                searchText = value
+                applyFiltersAndSort()
+                searchKeyboardPopup.close()
+            }
+
+            onCancelled: {
+                searchKeyboardPopup.close()
             }
         }
     }
