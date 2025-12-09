@@ -75,6 +75,21 @@ Page {
 
         // 监听元数据响应
         function onFileMetadataReceived(filename, metadataJson) {
+            // 检查是否是懒加载队列中的文件
+            var isLazyLoadRequest = false
+            for (var i = 0; i < pendingMetadataRequests.length; i++) {
+                if (pendingMetadataRequests[i] === filename) {
+                    isLazyLoadRequest = true
+                    break
+                }
+            }
+
+            // 如果不是懒加载请求，跳过（可能是详情对话框的请求）
+            if (!isLazyLoadRequest) {
+                console.log("=== Skipping metadata for non-lazy-load file:", filename)
+                return
+            }
+
             try {
                 var metadata = JSON.parse(metadataJson)
                 var thumbnailUrl = ""
@@ -1336,13 +1351,18 @@ Page {
     // 监听元数据响应以更新详情对话框
     Connections {
         target: printer
-        enabled: printer !== null && fileDetailsDialogLoader.active && fileDetailsDialogLoader.item && fileDetailsDialogLoader.item.opened
+        enabled: printer !== null
 
         function onFileMetadataReceived(filename, metadataJson) {
-            if (fileDetailsDialogLoader.active && fileDetailsDialogLoader.item &&
-                fileDetailsDialogLoader.item.opened && fileDetailsDialogLoader.selectedFile === filename) {
+            console.log("=== onFileMetadataReceived:", filename)
+
+            // 检查是否为详情对话框请求的文件
+            if (fileDetailsDialogLoader.selectedFile === filename) {
                 try {
                     var metadata = JSON.parse(metadataJson)
+                    console.log("=== Metadata parsed, thumbnails:", metadata.thumbnails ? metadata.thumbnails.length : 0)
+
+                    // 更新 metadata（即使对话框还未打开）
                     fileDetailsDialogLoader.metadata = metadata
 
                     var largeThumbUrl = ""
@@ -1360,12 +1380,18 @@ Page {
                             var filePath = "gcodes/" + largestThumb.relative_path
                             largeThumbUrl = apiUrl + "/server/files/" + filePath + "?date=" + Date.now()
                             fileDetailsDialogLoader.thumbnailData = largeThumbUrl
-                            console.log("Updated dialog with large thumbnail:", largestThumb.width + "x" + largestThumb.height)
+                            console.log("=== Updated dialog with large thumbnail:", largestThumb.width + "x" + largestThumb.height, largeThumbUrl)
+                        } else {
+                            console.log("=== No valid thumbnail path")
                         }
+                    } else {
+                        console.log("=== No thumbnails in metadata")
                     }
                 } catch (e) {
-                    console.error("Failed to parse metadata for dialog:", e)
+                    console.error("=== Failed to parse metadata for dialog:", e)
                 }
+            } else {
+                console.log("=== Metadata for different file, selected:", fileDetailsDialogLoader.selectedFile)
             }
         }
     }
