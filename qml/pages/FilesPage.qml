@@ -1401,7 +1401,7 @@ Page {
         id: searchKeyboardPopup
         modal: true
         dim: true
-        closePolicy: Popup.CloseOnEscape
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
         anchors.centerIn: Overlay.overlay
         width: Style.windowWidth * 0.7
         height: Style.baseUnit * 35
