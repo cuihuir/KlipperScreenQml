@@ -14,10 +14,16 @@ Page {
     property string selectedFile: ""  // 当前选中的文件
 
     // 分页相关
-    property var allFiles: []  // 完整文件列表
+    property var rawFiles: []  // 原始文件列表（未过滤/未排序）
+    property var allFiles: []  // 过滤后的文件列表
     property int currentPage: 0
     property int filesPerPage: 8  // 每页8个文件（2行4列）
     property int totalPages: 0
+
+    // 排序和搜索
+    property string sortBy: "modified"  // "name", "modified", "size"
+    property bool sortAscending: false  // false = 降序（最新/最大优先）
+    property string searchText: ""
 
     // 缩略图加载控制
     property var pendingMetadataRequests: []  // 待加载的元数据请求队列
@@ -43,12 +49,12 @@ Page {
                 console.log("Parsed files array, length:", files.length)
 
                 // 过滤并存储所有gcode文件
-                allFiles = []
+                rawFiles = []
                 for (var i = 0; i < files.length; i++) {
                     var file = files[i]
                     var filename = file.path || file.filename
                     if (filename && filename.endsWith(".gcode")) {
-                        allFiles.push({
+                        rawFiles.push({
                             filename: filename,
                             size: file.size || 0,
                             modified: file.modified || 0,
@@ -57,13 +63,10 @@ Page {
                     }
                 }
 
-                // 计算总页数
-                totalPages = Math.ceil(allFiles.length / filesPerPage)
-                console.log("=== Total files:", allFiles.length, "Total pages:", totalPages)
+                console.log("=== Total raw files:", rawFiles.length)
 
-                // 加载第一页
-                currentPage = 0
-                loadCurrentPage()
+                // 应用排序和过滤
+                applyFiltersAndSort()
             } catch (e) {
                 console.error("Parse error:", e)
                 showError("Failed to parse file list: " + e)
@@ -135,6 +138,139 @@ Page {
                     font.bold: true
                     font.letterSpacing: 2
                     color: Style.textPrimary
+                }
+
+                // 搜索框
+                Rectangle {
+                    Layout.preferredWidth: 250
+                    Layout.preferredHeight: Style.buttonHeight
+                    color: Style.bgSecondary
+                    radius: Style.radiusSmall
+                    border.width: Style.borderThin
+                    border.color: Style.border
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.margins: Style.spacingSmall
+                        spacing: Style.spacingSmall
+
+                        ThemedIcon {
+                            iconName: "search"
+                            iconSize: Style.fontMedium
+                            Layout.alignment: Qt.AlignVCenter
+                        }
+
+                        TextField {
+                            id: searchField
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            placeholderText: "Search files..."
+                            font.pixelSize: Style.fontNormal
+                            font.family: Style.fontFamily
+                            color: Style.textPrimary
+                            background: Rectangle { color: "transparent" }
+
+                            onTextChanged: {
+                                searchText = text
+                                applyFiltersAndSort()
+                            }
+                        }
+
+                        // 清除按钮
+                        ThemedIcon {
+                            iconName: "cancel"
+                            iconSize: Style.fontSmall
+                            visible: searchField.text.length > 0
+                            Layout.alignment: Qt.AlignVCenter
+
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: searchField.text = ""
+                            }
+                        }
+                    }
+                }
+
+                // 排序按钮
+                Rectangle {
+                    Layout.preferredWidth: Style.baseUnit * 11
+                    Layout.preferredHeight: Style.buttonHeight
+                    color: Style.bgSecondary
+                    radius: Style.radiusSmall
+                    border.width: Style.borderThin
+                    border.color: Style.border
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.margins: Style.spacingSmall
+                        spacing: Style.spacingSmall
+
+                        ThemedIcon {
+                            iconName: sortAscending ? "arrow-up" : "arrow-down"
+                            iconSize: Style.fontMedium
+                            Layout.alignment: Qt.AlignVCenter
+                        }
+
+                        Label {
+                            text: sortBy === "name" ? "Name" : (sortBy === "modified" ? "Date" : "Size")
+                            font.pixelSize: Style.fontSmall
+                            font.family: Style.fontFamily
+                            color: Style.textPrimary
+                            Layout.alignment: Qt.AlignVCenter
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: sortMenu.open()
+                    }
+
+                    // 排序菜单
+                    Menu {
+                        id: sortMenu
+                        y: parent.height
+
+                        MenuItem {
+                            text: "Sort by Name " + (sortBy === "name" ? (sortAscending ? "↑" : "↓") : "")
+                            onTriggered: {
+                                if (sortBy === "name") {
+                                    sortAscending = !sortAscending
+                                } else {
+                                    sortBy = "name"
+                                    sortAscending = true
+                                }
+                                applyFiltersAndSort()
+                            }
+                        }
+
+                        MenuItem {
+                            text: "Sort by Date " + (sortBy === "modified" ? (sortAscending ? "↑" : "↓") : "")
+                            onTriggered: {
+                                if (sortBy === "modified") {
+                                    sortAscending = !sortAscending
+                                } else {
+                                    sortBy = "modified"
+                                    sortAscending = false  // 默认降序（最新优先）
+                                }
+                                applyFiltersAndSort()
+                            }
+                        }
+
+                        MenuItem {
+                            text: "Sort by Size " + (sortBy === "size" ? (sortAscending ? "↑" : "↓") : "")
+                            onTriggered: {
+                                if (sortBy === "size") {
+                                    sortAscending = !sortAscending
+                                } else {
+                                    sortBy = "size"
+                                    sortAscending = false  // 默认降序（最大优先）
+                                }
+                                applyFiltersAndSort()
+                            }
+                        }
+                    }
                 }
 
                 // 分页信息
@@ -1066,6 +1202,43 @@ Page {
         } else {
             return minutes + " 分钟"
         }
+    }
+
+    // 应用搜索和排序
+    function applyFiltersAndSort() {
+        // 1. 过滤：根据搜索文本
+        allFiles = []
+        var searchLower = searchText.toLowerCase()
+
+        for (var i = 0; i < rawFiles.length; i++) {
+            var file = rawFiles[i]
+            if (searchText === "" || file.filename.toLowerCase().indexOf(searchLower) >= 0) {
+                allFiles.push(file)
+            }
+        }
+
+        // 2. 排序
+        allFiles.sort(function(a, b) {
+            var result = 0
+
+            if (sortBy === "name") {
+                result = a.filename.localeCompare(b.filename)
+            } else if (sortBy === "modified") {
+                result = a.modified - b.modified
+            } else if (sortBy === "size") {
+                result = a.size - b.size
+            }
+
+            return sortAscending ? result : -result
+        })
+
+        // 3. 计算总页数
+        totalPages = Math.ceil(allFiles.length / filesPerPage)
+        console.log("=== Filtered/Sorted:", allFiles.length, "files, Pages:", totalPages)
+
+        // 4. 重置到第一页
+        currentPage = 0
+        loadCurrentPage()
     }
 
     // 加载当前页的文件
