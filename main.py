@@ -10,11 +10,10 @@ import signal
 import logging
 from pathlib import Path
 
-# 性能优化：禁用 QML 调试日志
-# TEMPORARY: Enable for debugging navigation
-# os.environ["QT_LOGGING_RULES"] = "*.debug=false;qml=false;js=false"
-os.environ["QT_LOGGING_RULES"] = "qt.qml.connections=false;qt.qml.binding=false"
-os.environ["QML_CONSOLE_OUTPUT"] = "1"
+# 性能优化：禁用所有 QML 调试日志
+os.environ["QT_LOGGING_RULES"] = "*.debug=false;qml=false;js=false;qt.qml.*=false"
+os.environ["QML_DISABLE_DISK_CACHE"] = "0"
+os.environ["QML_FORCE_DISK_CACHE"] = "1"
 
 # 先配置日志 - 生产环境使用 WARNING 级别
 logging.basicConfig(
@@ -56,12 +55,12 @@ from backend.theme_provider import ThemeProvider
 
 
 def qt_message_handler(mode, context, message):
-    """处理 Qt 消息，包括 QML console.log"""
-    if mode == QtMsgType.QtDebugMsg:
-        print(f"[QML] {message}")
-    elif mode == QtMsgType.QtInfoMsg:
-        print(f"[INFO] {message}")
-    elif mode == QtMsgType.QtWarningMsg:
+    """处理 Qt 消息 - 性能优化：仅输出严重错误"""
+    # 性能优化：忽略所有 Debug 和 Info 消息
+    if mode == QtMsgType.QtWarningMsg:
+        # 过滤掉常见的无害警告
+        if "QML" in message or "Binding" in message:
+            return
         print(f"[WARNING] {message}")
     elif mode == QtMsgType.QtCriticalMsg:
         print(f"[CRITICAL] {message}")

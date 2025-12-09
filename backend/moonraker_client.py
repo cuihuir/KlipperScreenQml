@@ -1082,17 +1082,20 @@ class WebSocketThread(QThread):
                     self.connectionEstablished.emit()
                     self.logger.info("WebSocket 连接建立")
 
-                    # 接收消息循环
+                    # 接收消息循环（性能优化：延长 timeout）
                     while self._running:
                         try:
-                            # 非阻塞接收
-                            message = await asyncio.wait_for(websocket.recv(), timeout=0.1)
+                            # 性能优化：将 timeout 从 0.1 改为 1.0 秒，减少 CPU 占用
+                            message = await asyncio.wait_for(websocket.recv(), timeout=1.0)
                             self.messageReceived.emit(message)
                         except asyncio.TimeoutError:
                             # 检查是否有待发送消息
                             if self._send_queue:
                                 msg = self._send_queue.pop(0)
                                 await websocket.send(msg)
+                            # 性能优化：即使没有消息，也短暂休眠
+                            else:
+                                await asyncio.sleep(0.05)
                         except Exception as e:
                             self.logger.error(f"消息处理错误: {e}")
                             break
