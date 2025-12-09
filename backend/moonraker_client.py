@@ -83,6 +83,7 @@ class MoonrakerClient(QObject):
         self._position_y = 0.0
         self._position_z = 0.0
         self._homed_axes = ""  # 已归零的轴: "xyz" 或 "xy" 等
+        self._z_offset = 0.0  # Z 轴偏移 (gcode_offset)
 
         # 风扇状态
         self._fan_speed = 0.0  # 打印冷却风扇速度 (0.0-1.0)
@@ -229,6 +230,10 @@ class MoonrakerClient(QObject):
     @Property(str, notify=positionUpdated)
     def homedAxes(self):
         return self._homed_axes
+
+    @Property(float, notify=positionUpdated)
+    def zOffset(self):
+        return self._z_offset
 
     # === REST API 同步调用（用于初始化和非关键操作）===
     @Slot(result=bool)
@@ -957,6 +962,12 @@ class MoonrakerClient(QObject):
                 position_updated = True
             if 'homing_origin' in gm:
                 homing_origin = gm['homing_origin']
+                position_updated = True
+
+            # Z 轴偏移 (gcode_offset)
+            if 'homing_origin' in gm and len(gm['homing_origin']) >= 3:
+                # homing_origin[2] 就是 Z 轴偏移
+                self._z_offset = round(gm['homing_origin'][2], 3)
                 position_updated = True
 
         # 归零状态 (从 toolhead 获取)
