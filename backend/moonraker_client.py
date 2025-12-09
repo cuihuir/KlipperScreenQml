@@ -629,12 +629,11 @@ class MoonrakerClient(QObject):
                     filename = result['filename']
                     self.logger.info(f"收到文件元数据: {filename}")
 
-                    # 只处理当前打印文件的元数据（避免其他文件的缩略图覆盖）
-                    # API 返回的 filename 应该与 print_stats.filename 一致（纯文件名）
+                    # 判断是否为当前打印文件（用于更新打印状态）
                     is_current_file = (self._print_filename and filename == self._print_filename)
 
-                    # 提取缩略图用于打印状态显示（仅当前打印文件）
-                    if is_current_file and 'thumbnails' in result and len(result['thumbnails']) > 0:
+                    # 提取缩略图 - 所有文件都处理，但只有当前打印文件更新 _print_thumbnail
+                    if 'thumbnails' in result and len(result['thumbnails']) > 0:
                         # 找到最大的缩略图 (Fluidd 算法)
                         thumbnails = result['thumbnails']
                         largest_thumb = max(thumbnails, key=lambda t: t.get('width', 0) * t.get('height', 0))
@@ -648,10 +647,14 @@ class MoonrakerClient(QObject):
                             else:
                                 thumb_url = f"{self.base_url}/server/files/gcodes/{thumb_path}?date={int(time.time() * 1000)}"
 
-                            self._print_thumbnail = thumb_url
-                            self.logger.info(f"设置打印缩略图: {thumb_url} ({largest_thumb.get('width')}x{largest_thumb.get('height')})")
-                    elif 'thumbnails' in result and len(result['thumbnails']) > 0:
-                        self.logger.warning(f"忽略非当前文件的缩略图: {filename} (当前: {self._print_filename})")
+                            # 只有当前打印文件才更新 _print_thumbnail（用于 JobStatusPage）
+                            if is_current_file:
+                                self._print_thumbnail = thumb_url
+                                self.logger.info(f"设置打印缩略图: {thumb_url} ({largest_thumb.get('width')}x{largest_thumb.get('height')})")
+                            else:
+                                self.logger.debug(f"元数据已处理: {filename} ({largest_thumb.get('width')}x{largest_thumb.get('height')})")
+                    else:
+                        self.logger.debug(f"文件 {filename} 无缩略图")
 
                     # 提取层高和预估时间等元数据 (Fluidd 算法所需，仅当前打印文件)
                     if is_current_file and 'layer_height' in result:
