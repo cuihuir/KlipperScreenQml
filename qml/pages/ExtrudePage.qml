@@ -105,7 +105,7 @@ Page {
 
                         Label {
                             text: "▲"
-                            font.pixelSize: Style.fontXXXLarge
+                            font.pixelSize: Style.fontXXLarge
                             color: Style.bgPrimary
                             Layout.alignment: Qt.AlignHCenter
                         }
@@ -146,7 +146,7 @@ Page {
 
                         Label {
                             text: "▼"
-                            font.pixelSize: Style.fontXXXLarge
+                            font.pixelSize: Style.fontXXLarge
                             color: Style.bgPrimary
                             Layout.alignment: Qt.AlignHCenter
                         }

@@ -55,7 +55,7 @@ Page {
 
                     Label {
                         text: (printer ? printer.hotendTemp.toFixed(1) : "0.0") + "°C"
-                        font.pixelSize: Style.fontXXXLarge
+                        font.pixelSize: Style.fontXXLarge
                         font.family: Style.fontFamilyMono
                         font.bold: true
                         color: Style.error
@@ -127,7 +127,7 @@ Page {
 
                     Label {
                         text: (printer ? printer.bedTemp.toFixed(1) : "0.0") + "°C"
-                        font.pixelSize: Style.fontXXXLarge
+                        font.pixelSize: Style.fontXXLarge
                         font.family: Style.fontFamilyMono
                         font.bold: true
                         color: Style.warning
