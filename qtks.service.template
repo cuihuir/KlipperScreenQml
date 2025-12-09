@@ -1,0 +1,42 @@
+# QtKs systemd 服务模板
+# ⚠️  状态：未验证
+# 使用前请根据实际环境修改用户名和路径
+
+[Unit]
+Description=QtKs 3D Printer Interface
+After=network.target graphical.target
+Wants=graphical.target
+
+[Service]
+Type=simple
+# 替换为实际用户名
+User=orangepi
+# 替换为实际安装路径
+WorkingDirectory=/home/orangepi/QtKs
+Environment="DISPLAY=:0"
+# Qt 平台插件: xcb, wayland, eglfs
+Environment="QT_QPA_PLATFORM=xcb"
+# 确保使用虚拟环境中的 Python
+Environment="PATH=/home/orangepi/QtKs/venv/bin:/usr/local/bin:/usr/bin:/bin"
+
+# ===== 性能优化环境变量 =====
+# 禁用 Qt 调试输出
+Environment="QT_LOGGING_RULES=*.debug=false;qt.qml.*.debug=false"
+# 图形渲染优化
+Environment="QSG_RENDER_LOOP=basic"
+Environment="QSG_RHI_BACKEND=opengl"
+Environment="QT_XCB_GL_INTEGRATION=xcb_egl"
+# 图像内存限制
+Environment="QT_IMAGEIO_MAXALLOC=512"
+# QML 缓存优化
+Environment="QML_DISABLE_DISK_CACHE=0"
+Environment="QML_FORCE_DISK_CACHE=1"
+
+ExecStart=/home/orangepi/QtKs/venv/bin/python /home/orangepi/QtKs/main.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=graphical.target

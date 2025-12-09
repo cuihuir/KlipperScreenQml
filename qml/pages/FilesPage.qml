@@ -350,20 +350,13 @@ Page {
                     border.width: Style.borderThin
                     border.color: Style.divider
 
-                    // 旋转动画图标
+                    // 静态加载图标（性能优化：移除旋转动画）
                     Components.ThemedIcon {
                         anchors.centerIn: parent
                         iconName: "refresh"
                         iconSize: Style.fontXLarge
                         visible: isLoading
-
-                        RotationAnimation on rotation {
-                            running: isLoading
-                            loops: Animation.Infinite
-                            from: 0
-                            to: 360
-                            duration: 1000
-                        }
+                        // 性能优化：移除旋转动画，减少 CPU 占用
                     }
 
                     Label {
@@ -486,10 +479,13 @@ Page {
                                         source: model.thumbnail
                                         fillMode: Image.PreserveAspectFit
                                         asynchronous: true
-                                        cache: false
+                                        cache: true  // 性能优化：启用缓存
                                         // 设置最大尺寸，如果原图较小则保持原始尺寸
                                         sourceSize.width: parent.width - Style.spacingSmall * 2
                                         sourceSize.height: parent.height - Style.spacingSmall * 2
+
+                                        // 性能优化：平滑转换
+                                        smooth: false  // 禁用平滑以提升性能
 
                                         // 占位符图标
                                         Components.ThemedIcon {
@@ -548,7 +544,7 @@ Page {
                 }
             }
 
-            // 加载状态和空状态
+            // 加载状态和空状态（性能优化：移除闪烁动画）
             Label {
                 anchors.centerIn: parent
                 visible: fileModel.count === 0
@@ -558,14 +554,7 @@ Page {
                 font.letterSpacing: 1
                 color: isLoading ? Style.accent : Style.textDisabled
                 horizontalAlignment: Text.AlignHCenter
-
-                // 加载动画
-                SequentialAnimation on opacity {
-                    running: isLoading
-                    loops: Animation.Infinite
-                    NumberAnimation { from: 1.0; to: 0.3; duration: 600 }
-                    NumberAnimation { from: 0.3; to: 1.0; duration: 600 }
-                }
+                // 性能优化：移除闪烁动画
             }
         }
         }
@@ -766,7 +755,8 @@ Page {
                             source: fileDetailsDialog.thumbnailData
                             fillMode: Image.PreserveAspectFit
                             asynchronous: true
-                            cache: false
+                            cache: true  // 性能优化：启用缓存
+                            smooth: false  // 性能优化：禁用平滑
 
                             Label {
                                 anchors.centerIn: parent
@@ -1406,20 +1396,14 @@ Page {
         width: Style.windowWidth * 0.7
         height: Style.baseUnit * 35
 
+        // 性能优化：简化键盘弹出动画
         enter: Transition {
             NumberAnimation {
                 property: "opacity"
                 from: 0.0
                 to: 1.0
                 duration: Style.durationFast
-                easing.type: Easing.OutCubic
-            }
-            NumberAnimation {
-                property: "scale"
-                from: 0.9
-                to: 1.0
-                duration: Style.durationFast
-                easing.type: Easing.OutBack
+                easing.type: Easing.OutQuad
             }
         }
 
@@ -1429,7 +1413,7 @@ Page {
                 from: 1.0
                 to: 0.0
                 duration: Style.durationFast
-                easing.type: Easing.InCubic
+                easing.type: Easing.InQuad
             }
         }
 

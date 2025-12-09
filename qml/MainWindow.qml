@@ -77,73 +77,54 @@ ApplicationWindow {
         // 初始页面：HomePage
         initialItem: homePageComponent
 
-        // ===== 转场动画配置（iOS 风格） =====
+        // ===== 转场动画配置（优化版 - 减少计算量） =====
 
-        // Push 动画：新页面从右侧滑入
+        // 性能优化：在 ARM 设备上简化动画
+        // - 移除 x 位移动画（CPU密集）
+        // - 仅保留快速淡入淡出
+        // - 缩短动画时长到 100ms
+
+        // Push 动画：新页面快速淡入
         pushEnter: Transition {
             PropertyAnimation {
-                property: "x"
-                from: stackView.width
-                to: 0
-                duration: Style.durationNormal
-                easing.type: Easing.OutCubic
-            }
-            PropertyAnimation {
                 property: "opacity"
-                from: 0.8
+                from: 0.0
                 to: 1.0
-                duration: Style.durationNormal
+                duration: Style.durationFast  // 150ms
+                easing.type: Easing.OutQuad
             }
         }
 
-        // Push 动画：旧页面轻微向左移动并完全隐藏
+        // Push 动画：旧页面快速淡出
         pushExit: Transition {
-            PropertyAnimation {
-                property: "x"
-                from: 0
-                to: -stackView.width * 0.3
-                duration: Style.durationNormal
-                easing.type: Easing.OutCubic
-            }
-            PropertyAnimation {
-                property: "opacity"
-                from: 1.0
-                to: 0.0  // 完全隐藏，防止文字透过
-                duration: Style.durationNormal
-            }
-        }
-
-        // Pop 动画：旧页面向右滑出
-        popExit: Transition {
-            PropertyAnimation {
-                property: "x"
-                from: 0
-                to: stackView.width
-                duration: Style.durationNormal
-                easing.type: Easing.OutCubic
-            }
             PropertyAnimation {
                 property: "opacity"
                 from: 1.0
                 to: 0.0
-                duration: Style.durationNormal
+                duration: Style.durationFast
+                easing.type: Easing.InQuad
             }
         }
 
-        // Pop 动画：下层页面从左侧恢复（从完全隐藏状态）
-        popEnter: Transition {
-            PropertyAnimation {
-                property: "x"
-                from: -stackView.width * 0.3
-                to: 0
-                duration: Style.durationNormal
-                easing.type: Easing.OutCubic
-            }
+        // Pop 动画：旧页面快速淡出
+        popExit: Transition {
             PropertyAnimation {
                 property: "opacity"
-                from: 0.0  // 从完全隐藏开始，防止文字透过
+                from: 1.0
+                to: 0.0
+                duration: Style.durationFast
+                easing.type: Easing.InQuad
+            }
+        }
+
+        // Pop 动画：下层页面快速淡入
+        popEnter: Transition {
+            PropertyAnimation {
+                property: "opacity"
+                from: 0.0
                 to: 1.0
-                duration: Style.durationNormal
+                duration: Style.durationFast
+                easing.type: Easing.OutQuad
             }
         }
     }
