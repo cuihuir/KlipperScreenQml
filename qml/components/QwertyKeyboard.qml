@@ -337,8 +337,8 @@ Rectangle {
     }
 
     // 辅助函数
-    function appendChar(char) {
-        inputValue += char
+    function appendChar(ch) {
+        inputValue += ch
         root.textChanged(inputValue)
     }
 
