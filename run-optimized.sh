@@ -38,7 +38,15 @@ if [ -d "$SCRIPT_DIR/venv" ]; then
     echo "使用虚拟环境启动..."
     source "$SCRIPT_DIR/venv/bin/activate"
     python "$SCRIPT_DIR/main.py"
+elif [ -d "$SCRIPT_DIR/.venv" ]; then
+    echo "使用 .venv 虚拟环境启动..."
+    source "$SCRIPT_DIR/.venv/bin/activate"
+    python "$SCRIPT_DIR/main.py"
 else
-    echo "使用系统 Python 启动..."
-    python3 "$SCRIPT_DIR/main.py"
+    echo "错误: 未找到虚拟环境 (venv 或 .venv)"
+    echo "请先创建虚拟环境:"
+    echo "  python3 -m venv .venv"
+    echo "  source .venv/bin/activate"
+    echo "  pip install -r requirements.txt"
+    exit 1
 fi
