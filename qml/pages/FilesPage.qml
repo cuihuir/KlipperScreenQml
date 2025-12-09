@@ -75,18 +75,9 @@ Page {
 
         // 监听元数据响应
         function onFileMetadataReceived(filename, metadataJson) {
-            // 检查是否是懒加载队列中的文件
-            var isLazyLoadRequest = false
-            for (var i = 0; i < pendingMetadataRequests.length; i++) {
-                if (pendingMetadataRequests[i] === filename) {
-                    isLazyLoadRequest = true
-                    break
-                }
-            }
-
-            // 如果不是懒加载请求，跳过（可能是详情对话框的请求）
-            if (!isLazyLoadRequest) {
-                console.log("=== Skipping metadata for non-lazy-load file:", filename)
+            // 如果是详情对话框请求的文件，跳过（由对话框 Connections 处理）
+            if (fileDetailsDialogLoader.selectedFile === filename) {
+                console.log("=== Skipping metadata for dialog file:", filename)
                 return
             }
 
@@ -475,23 +466,24 @@ Page {
                             border.width: selectedFile === model.filename ? Style.borderThick : Style.borderThin
                             border.color: selectedFile === model.filename ? Style.accent : Style.divider
 
-                            ColumnLayout {
+                            // 横向布局：图标 + 文件信息
+                            RowLayout {
                                 anchors.fill: parent
                                 anchors.margins: Style.spacingMedium
-                                spacing: Style.spacingSmall
+                                spacing: Style.spacingMedium
 
-                                // 缩略图区域
+                                // 缩略图区域（正方形，占 1/3 宽度）
                                 Rectangle {
-                                    Layout.fillWidth: true
-                                    Layout.preferredHeight: parent.height * 0.55
+                                    Layout.preferredWidth: parent.height  // 正方形，以高度为准
+                                    Layout.fillHeight: true
                                     color: Style.bgSecondary
                                     border.width: Style.borderThin
                                     border.color: Style.divider
 
                                     Image {
                                         anchors.centerIn: parent
-                                        width: parent.width - Style.spacingMedium * 2
-                                        height: parent.height - Style.spacingMedium * 2
+                                        width: parent.width - Style.spacingSmall * 2
+                                        height: parent.height - Style.spacingSmall * 2
                                         source: model.thumbnail
                                         fillMode: Image.PreserveAspectFit
                                         asynchronous: true
@@ -508,30 +500,36 @@ Page {
                                     }
                                 }
 
-                                // 文件名
-                                Label {
+                                // 文件信息区域（占 2/3 宽度）
+                                ColumnLayout {
                                     Layout.fillWidth: true
-                                    text: model.filename
-                                    font.pixelSize: Style.fontSmall
-                                    font.family: Style.fontFamily
-                                    font.bold: true
-                                    color: Style.textPrimary
-                                    elide: Text.ElideMiddle
-                                    horizontalAlignment: Text.AlignHCenter
-                                    wrapMode: Text.NoWrap
-                                }
+                                    Layout.fillHeight: true
+                                    spacing: Style.spacingSmall
 
-                                // 文件大小
-                                Label {
-                                    Layout.fillWidth: true
-                                    text: Style.formatFileSize(model.size)
-                                    font.pixelSize: Style.fontXSmall
-                                    font.family: Style.fontFamilyMono
-                                    color: Style.textSecondary
-                                    horizontalAlignment: Text.AlignHCenter
-                                }
+                                    // 文件名
+                                    Label {
+                                        Layout.fillWidth: true
+                                        text: model.filename
+                                        font.pixelSize: Style.fontSmall
+                                        font.family: Style.fontFamily
+                                        font.bold: true
+                                        color: Style.textPrimary
+                                        elide: Text.ElideMiddle
+                                        wrapMode: Text.Wrap
+                                        maximumLineCount: 2
+                                    }
 
-                                Item { Layout.fillHeight: true }
+                                    // 文件大小
+                                    Label {
+                                        Layout.fillWidth: true
+                                        text: Style.formatFileSize(model.size)
+                                        font.pixelSize: Style.fontXSmall
+                                        font.family: Style.fontFamilyMono
+                                        color: Style.textSecondary
+                                    }
+
+                                    Item { Layout.fillHeight: true }
+                                }
                             }
 
                             // 点击卡片显示详细信息对话框
