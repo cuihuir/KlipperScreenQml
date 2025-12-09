@@ -154,9 +154,9 @@ Page {
                         anchors.margins: Style.spacingSmall
                         spacing: Style.spacingSmall
 
-                        ThemedIcon {
-                            iconName: "search"
-                            iconSize: Style.fontMedium
+                        Label {
+                            text: "🔍"
+                            font.pixelSize: Style.fontMedium
                             Layout.alignment: Qt.AlignVCenter
                         }
 
@@ -177,9 +177,10 @@ Page {
                         }
 
                         // 清除按钮
-                        ThemedIcon {
-                            iconName: "cancel"
-                            iconSize: Style.fontSmall
+                        Label {
+                            text: "✕"
+                            font.pixelSize: Style.fontMedium
+                            color: Style.textSecondary
                             visible: searchField.text.length > 0
                             Layout.alignment: Qt.AlignVCenter
 

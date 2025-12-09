@@ -137,7 +137,7 @@ Rectangle {
                     Label {
                         anchors.centerIn: parent
                         text: index + 1
-                        font.pixelSize: Style.fontXXXLarge
+                        font.pixelSize: Style.fontXXLarge
                         font.family: Style.fontFamilyMono
                         font.bold: true
                         color: Style.textPrimary
@@ -235,7 +235,7 @@ Rectangle {
                     Label {
                         anchors.centerIn: parent
                         text: index + 4
-                        font.pixelSize: Style.fontXXXLarge
+                        font.pixelSize: Style.fontXXLarge
                         font.family: Style.fontFamilyMono
                         font.bold: true
                         color: Style.textPrimary
@@ -260,7 +260,7 @@ Rectangle {
                 Label {
                     anchors.centerIn: parent
                     text: "."
-                    font.pixelSize: Style.fontXXXLarge
+                    font.pixelSize: Style.fontXXLarge
                     font.family: Style.fontFamilyMono
                     font.bold: true
                     color: Style.textPrimary
@@ -326,7 +326,7 @@ Rectangle {
                     Label {
                         anchors.centerIn: parent
                         text: index + 7
-                        font.pixelSize: Style.fontXXXLarge
+                        font.pixelSize: Style.fontXXLarge
                         font.family: Style.fontFamilyMono
                         font.bold: true
                         color: Style.textPrimary
@@ -351,7 +351,7 @@ Rectangle {
                 Label {
                     anchors.centerIn: parent
                     text: "0"
-                    font.pixelSize: Style.fontXXXLarge
+                    font.pixelSize: Style.fontXXLarge
                     font.family: Style.fontFamilyMono
                     font.bold: true
                     color: Style.textPrimary
