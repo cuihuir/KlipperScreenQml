@@ -24,14 +24,14 @@ Rectangle {
     // ===== 公共属性 =====
 
     /**
-     * 按钮宽度（默认 80px）
+     * 按钮宽度（默认 160px，增加一倍）
      */
-    property real buttonWidth: 80
+    property real buttonWidth: 160
 
     /**
-     * 按钮高度（默认 80px，与宽度相同形成正方形）
+     * 按钮高度（默认 160px，与宽度相同形成正方形）
      */
-    property real buttonHeight: 80
+    property real buttonHeight: 160
 
     /**
      * StackView 引用（用于控制导航）
@@ -85,7 +85,7 @@ Rectangle {
             ThemedIcon {
                 anchors.centerIn: parent
                 iconName: "home"
-                iconSize: Style.fontXLarge
+                iconSize: Style.fontXXLarge  // 增大一倍
             }
 
             // 鼠标交互
@@ -159,7 +159,7 @@ Rectangle {
             ThemedIcon {
                 anchors.centerIn: parent
                 iconName: "arrow-left"
-                iconSize: Style.fontXXLarge
+                iconSize: Style.fontXXXLarge  // 增大一倍
                 opacity: parent.enabled ? 1.0 : 0.4
             }
 
@@ -219,15 +219,15 @@ Rectangle {
 
             // 连接状态指示器（无背景，直接显示图标）
             Item {
-                Layout.preferredWidth: 40
-                Layout.preferredHeight: 32
+                Layout.preferredWidth: 80
+                Layout.preferredHeight: 64
                 Layout.alignment: Qt.AlignHCenter
 
                 // 连接状态图标（绿色WiFi图标=连接，红色断开图标=断开）
                 Rectangle {
-                    width: 12
-                    height: 12
-                    radius: 6
+                    width: 24
+                    height: 24
+                    radius: 12
                     color: {
                         if (!root.printer) return Style.bgCard
                         if (root.printer.isConnected) return Style.success
@@ -246,8 +246,19 @@ Rectangle {
                     // 连接时显示WiFi信号符号（3条信号线）
                     Rectangle {
                         id: signal1
-                        width: 2
-                        height: 4
+                        width: 4
+                        height: 8
+                        color: "white"
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.bottom: parent.top
+                        anchors.bottomMargin: 12
+                        visible: root.printer && root.printer.isConnected
+                    }
+
+                    Rectangle {
+                        id: signal2
+                        width: 4
+                        height: 12
                         color: "white"
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.bottom: parent.top
@@ -256,20 +267,9 @@ Rectangle {
                     }
 
                     Rectangle {
-                        id: signal2
-                        width: 2
-                        height: 6
-                        color: "white"
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        anchors.bottom: parent.top
-                        anchors.bottomMargin: 3
-                        visible: root.printer && root.printer.isConnected
-                    }
-
-                    Rectangle {
                         id: signal3
-                        width: 2
-                        height: 8
+                        width: 4
+                        height: 16
                         color: "white"
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.bottom: parent.top
@@ -282,11 +282,11 @@ Rectangle {
             // 喷嘴温度（直接显示数字，无背景）
             ColumnLayout {
                 Layout.alignment: Qt.AlignHCenter
-                spacing: 2
+                spacing: 4
 
                 ThemedIcon {
                     iconName: "heat-up"
-                    iconSize: 16
+                    iconSize: 32  // 增大一倍
                     Layout.alignment: Qt.AlignHCenter
                 }
 
@@ -300,7 +300,7 @@ Rectangle {
                         }
                         return temp + "°"
                     }
-                    font.pixelSize: 12
+                    font.pixelSize: 24  // 增大一倍
                     font.family: Style.fontFamilyMono
                     font.bold: true
                     color: Style.accent
@@ -311,11 +311,11 @@ Rectangle {
             // 热床温度（直接显示数字，无背景）
             ColumnLayout {
                 Layout.alignment: Qt.AlignHCenter
-                spacing: 2
+                spacing: 4
 
                 ThemedIcon {
                     iconName: "bed"
-                    iconSize: 16
+                    iconSize: 32  // 增大一倍
                     Layout.alignment: Qt.AlignHCenter
                 }
 
@@ -329,7 +329,7 @@ Rectangle {
                         }
                         return temp + "°"
                     }
-                    font.pixelSize: 12
+                    font.pixelSize: 24  // 增大一倍
                     font.family: Style.fontFamilyMono
                     font.bold: true
                     color: Style.info

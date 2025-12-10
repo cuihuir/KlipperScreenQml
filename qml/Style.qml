@@ -62,6 +62,7 @@ QtObject {
 
     // 字体大小
     readonly property real fontXXLarge: baseUnit * 4.5  // 超超大（主要数字）
+    readonly property int fontXXXLarge: Math.round(baseUnit * 5.5)  // 极大尺寸
     readonly property real fontXLarge: baseUnit * 3.5   // 超大标题
     readonly property real fontLarge: baseUnit * 2.5    // 大标题
     readonly property real fontMedium: baseUnit * 1.8   // 中标题

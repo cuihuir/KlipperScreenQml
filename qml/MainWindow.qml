@@ -32,8 +32,8 @@ ApplicationWindow {
     // 暴露 pageRegistry 供子页面使用
     property alias pageRegistry: pageRegistry
 
-    // 全局常量：导航按钮宽度
-    readonly property int navButtonWidth: 80
+    // 全局常量：导航按钮宽度（增加一倍）
+    readonly property int navButtonWidth: 160
 
     // ===== 自定义 Overlay 区域，避免覆盖左侧导航按钮 =====
     Overlay.modal: Item {
