@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Effects
+import Qt5Compat.GraphicalEffects
 import ".."
 
 /**
@@ -235,33 +235,25 @@ Rectangle {
                     }
                     fillMode: Image.PreserveAspectFit
                     smooth: true
+                    visible: false  // 隐藏原始图像，只显示着色后的
                 }
 
-                MultiEffect {
-                    source: connectionIcon
+                ColorOverlay {
                     anchors.fill: connectionIcon
-                    colorization: 1.0
-                    colorizationColor: {
+                    source: connectionIcon
+                    color: {
                         if (!root.printer || !root.printer.isConnected) {
                             return Style.error  // 红色
                         }
                         return Style.success  // 绿色
                     }
 
-                    // 断开连接时闪烁
-                    SequentialAnimation on colorizationColor {
+                    // 断开连接时透明度闪烁
+                    SequentialAnimation on opacity {
                         running: root.printer && !root.printer.isConnected
                         loops: Animation.Infinite
-                        ColorAnimation {
-                            from: Style.error
-                            to: Qt.darker(Style.error, 1.8)
-                            duration: 800
-                        }
-                        ColorAnimation {
-                            from: Qt.darker(Style.error, 1.8)
-                            to: Style.error
-                            duration: 800
-                        }
+                        NumberAnimation { from: 1.0; to: 0.3; duration: 800 }
+                        NumberAnimation { from: 0.3; to: 1.0; duration: 800 }
                     }
                 }
             }
