@@ -93,8 +93,10 @@ class MoonrakerClient(QObject):
         self._led_brightness = 0.0  # LED 亮度 (0.0-1.0)
         self._led_on = False
 
-        # 性能优化：进度更新节流
+        # 性能优化：数据更新节流时间戳
         self._last_progress_update_time = 0.0  # 上次进度更新时间戳
+        self._last_temp_update_time = 0.0      # 上次温度更新时间戳
+        self._last_position_update_time = 0.0  # 上次坐标更新时间戳
 
         self.logger = logging.getLogger(__name__)
 
@@ -783,42 +785,48 @@ class MoonrakerClient(QObject):
         """从状态数据更新本地缓存"""
         updated = False
 
-        # 挤出机温度 - 性能优化：只有变化 >= 0.5°C 才更新
-        if 'extruder' in status:
-            ext = status['extruder']
-            if 'temperature' in ext:
-                new_temp = round(ext['temperature'], 1)
-                if abs(new_temp - self._extruder_temp) >= 0.5:
-                    self._extruder_temp = new_temp
-                    updated = True
-            if 'target' in ext:
-                new_target = round(ext['target'], 1)
-                if new_target != self._extruder_target:
-                    self._extruder_target = new_target
-                    updated = True
+        # 温度更新 - 性能优化：变化 >= 0.5°C 且距离上次更新 >= 0.5秒
+        if 'extruder' in status or 'heater_bed' in status:
+            import time
+            current_time = time.time()
 
-        # 热床温度 - 性能优化：只有变化 >= 0.5°C 才更新
-        if 'heater_bed' in status:
-            bed = status['heater_bed']
-            if 'temperature' in bed:
-                new_temp = round(bed['temperature'], 1)
-                if abs(new_temp - self._bed_temp) >= 0.5:
-                    self._bed_temp = new_temp
-                    updated = True
-            if 'target' in bed:
-                new_target = round(bed['target'], 1)
-                if new_target != self._bed_target:
-                    self._bed_target = new_target
-                    updated = True
+            # 只在距离上次更新超过0.5秒时才检查和更新
+            if current_time - self._last_temp_update_time >= 0.5:
+                if 'extruder' in status:
+                    ext = status['extruder']
+                    if 'temperature' in ext:
+                        new_temp = round(ext['temperature'], 1)
+                        if abs(new_temp - self._extruder_temp) >= 0.5:
+                            self._extruder_temp = new_temp
+                            updated = True
+                    if 'target' in ext:
+                        new_target = round(ext['target'], 1)
+                        if new_target != self._extruder_target:
+                            self._extruder_target = new_target
+                            updated = True
 
-        if updated:
-            temps = {
-                'extruder_temp': self._extruder_temp,
-                'extruder_target': self._extruder_target,
-                'bed_temp': self._bed_temp,
-                'bed_target': self._bed_target,
-            }
-            self.temperatureUpdated.emit(temps)
+                if 'heater_bed' in status:
+                    bed = status['heater_bed']
+                    if 'temperature' in bed:
+                        new_temp = round(bed['temperature'], 1)
+                        if abs(new_temp - self._bed_temp) >= 0.5:
+                            self._bed_temp = new_temp
+                            updated = True
+                    if 'target' in bed:
+                        new_target = round(bed['target'], 1)
+                        if new_target != self._bed_target:
+                            self._bed_target = new_target
+                            updated = True
+
+                if updated:
+                    self._last_temp_update_time = current_time
+                    temps = {
+                        'extruder_temp': self._extruder_temp,
+                        'extruder_target': self._extruder_target,
+                        'bed_temp': self._bed_temp,
+                        'bed_target': self._bed_target,
+                    }
+                    self.temperatureUpdated.emit(temps)
 
         # 打印状态和统计信息
         stats_updated = False
@@ -914,6 +922,7 @@ class MoonrakerClient(QObject):
                 stats_updated = True
 
         # 位置信息 (从 gcode_move 获取) + Fluidd 层数计算
+        # 性能优化：降低坐标更新频率，减少UI重绘（每0.5秒最多更新一次）
         position_updated = False
         speed_factor = 1.0
         extrude_factor = 1.0
@@ -923,32 +932,53 @@ class MoonrakerClient(QObject):
         if 'gcode_move' in status:
             gm = status['gcode_move']
             if 'gcode_position' in gm:
-                pos = gm['gcode_position']
-                if len(pos) >= 3:
-                    self._position_x = round(pos[0], 2)
-                    self._position_y = round(pos[1], 2)
-                    new_z = round(pos[2], 2)
+                import time
+                current_time = time.time()
 
-                    # Fluidd 算法：计算当前层（如果 Klipper 未提供）
-                    # 只在打印中且 Z 变化时计算
-                    if (self._printer_state == "printing" and
-                        new_z != self._position_z and
-                        self._print_duration > 0 and
-                        self._layer_height > 0 and
-                        self._first_layer_height > 0):
+                # 只在距离上次更新超过0.5秒时才检查和更新
+                if current_time - self._last_position_update_time >= 0.5:
+                    pos = gm['gcode_position']
+                    if len(pos) >= 3:
+                        new_x = round(pos[0], 1)  # 降低精度到0.1mm
+                        new_y = round(pos[1], 1)
+                        new_z = round(pos[2], 2)  # Z轴保持0.01mm精度
 
-                        import math
-                        # Fluidd 公式: ceil((z - first_layer_height) / layer_height + 1)
-                        calculated_layer = math.ceil(
-                            (new_z - self._first_layer_height) / self._layer_height + 1
-                        )
+                        # 性能优化：只有坐标变化超过阈值才更新
+                        # XY: 变化 >= 1.0mm 才更新（打印时XY快速移动）
+                        # Z: 变化 >= 0.05mm 才更新（Z轴缓慢变化）
+                        x_changed = abs(new_x - self._position_x) >= 1.0
+                        y_changed = abs(new_y - self._position_y) >= 1.0
+                        z_changed = abs(new_z - self._position_z) >= 0.05
 
-                        if calculated_layer > 0:
-                            self._current_layer = calculated_layer
-                            stats_updated = True
+                        if x_changed or y_changed or z_changed:
+                            if x_changed:
+                                self._position_x = new_x
+                            if y_changed:
+                                self._position_y = new_y
 
-                    self._position_z = new_z
-                    position_updated = True
+                            # Fluidd 算法：计算当前层（如果 Klipper 未提供）
+                            # 只在打印中且 Z 变化时计算
+                            if (z_changed and
+                                self._printer_state == "printing" and
+                                self._print_duration > 0 and
+                                self._layer_height > 0 and
+                                self._first_layer_height > 0):
+
+                                import math
+                                # Fluidd 公式: ceil((z - first_layer_height) / layer_height + 1)
+                                calculated_layer = math.ceil(
+                                    (new_z - self._first_layer_height) / self._layer_height + 1
+                                )
+
+                                if calculated_layer > 0:
+                                    self._current_layer = calculated_layer
+                                    stats_updated = True
+
+                            if z_changed:
+                                self._position_z = new_z
+
+                            self._last_position_update_time = current_time
+                            position_updated = True
 
             # 速度和挤出倍率
             if 'speed_factor' in gm:

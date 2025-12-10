@@ -16,6 +16,9 @@ export QSG_RENDER_LOOP=basic           # 使用基础渲染循环（减少线程
 export QSG_RHI_BACKEND=opengl          # 使用 OpenGL 后端
 export QT_XCB_GL_INTEGRATION=xcb_egl   # 使用 EGL 集成
 
+# 帧率限制 - 30fps 适合 ARM 设备
+export QSG_RENDER_TARGET_FPS=30        # 目标帧率 30fps
+
 # 图像优化
 export QT_IMAGEIO_MAXALLOC=512         # 限制图像内存分配（MB）
 

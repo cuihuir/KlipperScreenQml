@@ -40,6 +40,7 @@ Page {
     }
 
     // Connections to MoonrakerClient signals
+    // 性能优化：使用局部缓存减少QML属性绑定重计算
     Connections {
         target: printer
 
@@ -72,22 +73,33 @@ Page {
             }
         }
 
-        // Temperature update
+        // Temperature update - 只更新变化的值
         function onTemperatureUpdated(temps) {
             var data = (typeof temps === 'string') ? JSON.parse(temps) : temps
-            if (data.extruder_temp !== undefined) extruderTemp = data.extruder_temp
-            if (data.extruder_target !== undefined) extruderTarget = data.extruder_target
-            if (data.bed_temp !== undefined) bedTemp = data.bed_temp
-            if (data.bed_target !== undefined) bedTarget = data.bed_target
+            if (data.extruder_temp !== undefined && Math.abs(data.extruder_temp - extruderTemp) >= 0.5) {
+                extruderTemp = data.extruder_temp
+            }
+            if (data.extruder_target !== undefined && data.extruder_target !== extruderTarget) {
+                extruderTarget = data.extruder_target
+            }
+            if (data.bed_temp !== undefined && Math.abs(data.bed_temp - bedTemp) >= 0.5) {
+                bedTemp = data.bed_temp
+            }
+            if (data.bed_target !== undefined && data.bed_target !== bedTarget) {
+                bedTarget = data.bed_target
+            }
         }
 
-        // Position update
+        // Position update - 只更新变化的值
         function onPositionUpdated(pos) {
             var data = (typeof pos === 'string') ? JSON.parse(pos) : pos
-            if (data.gcode_position) {
-                zPosition = data.gcode_position[2] || 0
+            if (data.gcode_position && data.gcode_position.length >= 3) {
+                var newZ = data.gcode_position[2] || 0
+                if (Math.abs(newZ - zPosition) >= 0.05) {
+                    zPosition = newZ
+                }
             }
-            if (data.homing_origin) {
+            if (data.homing_origin && data.homing_origin.length >= 3) {
                 zOffset = data.homing_origin[2] || 0
             }
             if (data.extrude_factor !== undefined) {

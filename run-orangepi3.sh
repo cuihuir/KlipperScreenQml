@@ -22,6 +22,10 @@ export QSG_RHI_BACKEND=opengl                   # 使用 OpenGL 后端
 export QT_XCB_GL_INTEGRATION=glx                # 使用 glx 而不是 xcb_egl
 export QT_OPENGL_LOGGING=1                      # 启用 OpenGL 日志
 
+# 帧率限制 - 降低到 30fps 节省 CPU/GPU
+export QSG_RENDER_TARGET_FPS=30                 # 目标帧率 30fps
+export QT_QUICK_FLICKABLE_MAX_VELOCITY=2000     # 降低滚动速度
+
 # 禁用可能导致 Rockchip GPU 问题的高级功能
 export QT_QUICK_MULTISAMPLE=0                   # 禁用多重采样
 export QT_QUICK_USE_FBO=0                      # 禁用 FBO（Frame Buffer Object）

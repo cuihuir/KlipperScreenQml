@@ -59,9 +59,23 @@ Page {
                             color: Style.bgCard
                             radius: 4
 
+                            // 性能优化：缓存坐标值，避免频繁重绘
+                            property real cachedX: 0
+                            property real cachedY: 0
+
+                            Connections {
+                                target: printer
+                                function onPositionUpdated(pos) {
+                                    if (pos.gcode_position) {
+                                        parent.cachedX = pos.gcode_position[0]
+                                        parent.cachedY = pos.gcode_position[1]
+                                    }
+                                }
+                            }
+
                             Text {
                                 anchors.centerIn: parent
-                                text: "X:" + (printer ? printer.positionX.toFixed(1) : "0") + " Y:" + (printer ? printer.positionY.toFixed(1) : "0")
+                                text: "X:" + parent.cachedX.toFixed(1) + " Y:" + parent.cachedY.toFixed(1)
                                 font.pixelSize: 14
                                 font.family: Style.fontFamilyMono
                                 color: Style.accent
@@ -184,9 +198,22 @@ Page {
                             height: 32
                             color: Style.bgCard
                             radius: 4
+
+                            // 性能优化：缓存Z坐标值，避免频繁重绘
+                            property real cachedZ: 0
+
+                            Connections {
+                                target: printer
+                                function onPositionUpdated(pos) {
+                                    if (pos.gcode_position) {
+                                        parent.cachedZ = pos.gcode_position[2]
+                                    }
+                                }
+                            }
+
                             Text {
                                 anchors.centerIn: parent
-                                text: (printer ? printer.positionZ.toFixed(2) : "0.00") + " mm"
+                                text: parent.cachedZ.toFixed(2) + " mm"
                                 font.pixelSize: 14
                                 font.family: Style.fontFamilyMono
                                 color: Style.warning
@@ -455,6 +482,22 @@ Page {
                             anchors.horizontalCenter: parent.horizontalCenter
                         }
 
+                        // 性能优化：缓存温度值
+                        property real cachedHotendTemp: 0
+                        property real cachedHotendTarget: 0
+                        property real cachedBedTemp: 0
+                        property real cachedBedTarget: 0
+
+                        Connections {
+                            target: printer
+                            function onTemperatureUpdated(temps) {
+                                parent.cachedHotendTemp = temps.extruder_temp || 0
+                                parent.cachedHotendTarget = temps.extruder_target || 0
+                                parent.cachedBedTemp = temps.bed_temp || 0
+                                parent.cachedBedTarget = temps.bed_target || 0
+                            }
+                        }
+
                         Row {
                             width: parent.width
                             spacing: 8
@@ -466,7 +509,7 @@ Page {
                                 width: 50
                             }
                             Text {
-                                text: (printer ? printer.hotendTemp.toFixed(0) : "0") + "°C / " + (printer ? printer.hotendTarget.toFixed(0) : "0") + "°C"
+                                text: parent.parent.cachedHotendTemp.toFixed(0) + "°C / " + parent.parent.cachedHotendTarget.toFixed(0) + "°C"
                                 font.pixelSize: 14
                                 font.family: Style.fontFamilyMono
                                 color: Style.accent
@@ -484,7 +527,7 @@ Page {
                                 width: 50
                             }
                             Text {
-                                text: (printer ? printer.bedTemp.toFixed(0) : "0") + "°C / " + (printer ? printer.bedTarget.toFixed(0) : "0") + "°C"
+                                text: parent.parent.cachedBedTemp.toFixed(0) + "°C / " + parent.parent.cachedBedTarget.toFixed(0) + "°C"
                                 font.pixelSize: 14
                                 font.family: Style.fontFamilyMono
                                 color: Style.accent
