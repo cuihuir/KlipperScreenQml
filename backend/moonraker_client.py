@@ -611,6 +611,12 @@ class MoonrakerClient(QObject):
     def _on_ws_connection_error(self, error_msg: str):
         """WebSocket 连接错误（限流后的通知）"""
         self.logger.warning(f"显示连接错误通知: {error_msg}")
+
+        # 确保连接状态为false
+        if self._is_connected:
+            self._is_connected = False
+            self.printerDisconnected.emit()
+
         self.notificationReceived.emit("error", f"Printer connection error: {error_msg}")
 
     def _on_ws_message(self, message: str):
