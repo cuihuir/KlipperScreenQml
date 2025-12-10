@@ -114,12 +114,10 @@ Page {
                         break
                     }
                 }
-
-                // 继续加载下一个元数据
-                isLoadingMetadata = false
-                loadNextMetadata()
             } catch (e) {
                 console.error("=== Failed to parse metadata:", e)
+            } finally {
+                // 无论成功或失败，都继续加载下一个
                 isLoadingMetadata = false
                 loadNextMetadata()
             }
