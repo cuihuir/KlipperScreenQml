@@ -137,6 +137,7 @@ ApplicationWindow {
         anchors.bottom: parent.bottom
         width: navButtonWidth
         stackView: stackView
+        printer: moonrakerClient
         z: 10000  // 确保在 Overlay 之上
     }
 

@@ -3,6 +3,18 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import ".."
 
+// 安全的时间格式化函数，避免锁屏乱码
+function formatTimeSafe(date) {
+    try {
+        var hours = date.getHours().toString().padStart(2, '0')
+        var minutes = date.getMinutes().toString().padStart(2, '0')
+        return hours + ":" + minutes
+    } catch (e) {
+        console.error("Time formatting error:", e)
+        return "--:--"
+    }
+}
+
 // Metro风格状态栏 - 机场指示牌风格
 Rectangle {
     id: root
@@ -203,13 +215,13 @@ Rectangle {
                 repeat: true
                 onTriggered: {
                     var now = new Date()
-                    timeLabel.text = Qt.formatTime(now, "HH:mm")
+                    timeLabel.text = formatTimeSafe(now)
                 }
             }
 
             Component.onCompleted: {
                 var now = new Date()
-                text = Qt.formatTime(now, "HH:mm")
+                text = formatTimeSafe(now)
             }
         }
     }
