@@ -81,8 +81,10 @@ QtObject {
     readonly property real buttonHeightLarge: baseUnit * 5    // 主要操作按钮(打印/删除/确认)
     readonly property real buttonHeight: baseUnit * 4.5       // 常用功能按钮(暂停/温度/刷新)
     readonly property real buttonHeightSmall: baseUnit * 3.5  // 辅助按钮
-    readonly property real iconSize: baseUnit * 2.5
-    readonly property real iconSizeSmall: baseUnit * 1.5
+    readonly property int iconSize: Math.round(baseUnit * 2.5)
+    readonly property int iconSizeSmall: Math.round(baseUnit * 1.5)
+    readonly property int iconSizeLarge: Math.round(baseUnit * 4)
+    readonly property int iconSizeXLarge: Math.round(baseUnit * 5)
 
     // 圆角（Metro风格：极小或无）
     readonly property real radiusNone: 0

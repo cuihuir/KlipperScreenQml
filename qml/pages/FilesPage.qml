@@ -96,8 +96,14 @@ Page {
 
                     if (selectedThumb && selectedThumb.relative_path && printer && printer.apiHost && printer.apiPort) {
                         var apiUrl = "http://" + printer.apiHost + ":" + printer.apiPort
-                        var filePath = "gcodes/" + selectedThumb.relative_path
-                        thumbnailUrl = apiUrl + "/server/files/" + filePath + "?date=" + Date.now()
+                        var thumbPath = selectedThumb.relative_path
+                        // 检查路径前缀，避免重复添加 gcodes/
+                        if (thumbPath.startsWith("gcodes/")) {
+                            thumbnailUrl = apiUrl + "/server/files/" + thumbPath + "?date=" + Date.now()
+                        } else {
+                            thumbnailUrl = apiUrl + "/server/files/gcodes/" + thumbPath + "?date=" + Date.now()
+                        }
+                        console.log("小缩略图URL:", thumbnailUrl)
                     }
                 }
 
@@ -1367,10 +1373,15 @@ Page {
 
                         if (largestThumb && largestThumb.relative_path && printer && printer.apiHost && printer.apiPort) {
                             var apiUrl = "http://" + printer.apiHost + ":" + printer.apiPort
-                            var filePath = "gcodes/" + largestThumb.relative_path
-                            largeThumbUrl = apiUrl + "/server/files/" + filePath + "?date=" + Date.now()
+                            var thumbPath = largestThumb.relative_path
+                            // 检查路径前缀，避免重复添加 gcodes/
+                            if (thumbPath.startsWith("gcodes/")) {
+                                largeThumbUrl = apiUrl + "/server/files/" + thumbPath + "?date=" + Date.now()
+                            } else {
+                                largeThumbUrl = apiUrl + "/server/files/gcodes/" + thumbPath + "?date=" + Date.now()
+                            }
                             fileDetailsDialogLoader.thumbnailData = largeThumbUrl
-                            console.log("=== Updated dialog with large thumbnail:", largestThumb.width + "x" + largestThumb.height, largeThumbUrl)
+                            console.log("=== 大缩略图URL:", largestThumb.width + "x" + largestThumb.height, largeThumbUrl)
                         } else {
                             console.log("=== No valid thumbnail path")
                         }
