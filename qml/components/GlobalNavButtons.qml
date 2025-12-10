@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Effects
 import ".."
 
 /**
@@ -218,17 +219,50 @@ Rectangle {
             spacing: Style.spacingMedium
 
             // GUI连接状态指示器（与Moonraker的连接）
-            ThemedIcon {
-                iconName: root.printer && root.printer.isConnected ? "link" : "unlink"
-                iconSize: 32
+            Item {
+                Layout.preferredWidth: 48
+                Layout.preferredHeight: 48
                 Layout.alignment: Qt.AlignHCenter
 
-                // 断开连接时闪烁
-                SequentialAnimation on opacity {
-                    running: root.printer && !root.printer.isConnected
-                    loops: Animation.Infinite
-                    NumberAnimation { from: 1.0; to: 0.3; duration: 800 }
-                    NumberAnimation { from: 0.3; to: 1.0; duration: 800 }
+                Image {
+                    id: connectionIcon
+                    anchors.centerIn: parent
+                    width: 32
+                    height: 32
+                    source: {
+                        var iconName = (root.printer && root.printer.isConnected) ? "link" : "unlink"
+                        return "file:///" + Qt.resolvedUrl("../../assets/icons/" + iconName + ".png").toString().replace("file:///", "")
+                    }
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                }
+
+                MultiEffect {
+                    source: connectionIcon
+                    anchors.fill: connectionIcon
+                    colorization: 1.0
+                    colorizationColor: {
+                        if (!root.printer || !root.printer.isConnected) {
+                            return Style.error  // 红色
+                        }
+                        return Style.success  // 绿色
+                    }
+
+                    // 断开连接时闪烁
+                    SequentialAnimation on colorizationColor {
+                        running: root.printer && !root.printer.isConnected
+                        loops: Animation.Infinite
+                        ColorAnimation {
+                            from: Style.error
+                            to: Qt.darker(Style.error, 1.8)
+                            duration: 800
+                        }
+                        ColorAnimation {
+                            from: Qt.darker(Style.error, 1.8)
+                            to: Style.error
+                            duration: 800
+                        }
+                    }
                 }
             }
 
