@@ -104,7 +104,7 @@ def main():
     # 创建主题系统
     try:
         asset_cache = AssetCache(max_cache_size=20 * 1024 * 1024)  # 20MB
-        icon_loader = IconLoader(cache=asset_cache)
+        icon_loader = IconLoader(cache=asset_cache, custom_icons_dir=Path("assets/icons"))
         theme_manager = ThemeManager(theme_dir="KlipperScreen/styles", cache=asset_cache)
         theme_provider = ThemeProvider(theme_manager, icon_loader)
 
