@@ -215,156 +215,125 @@ Rectangle {
             Layout.alignment: Qt.AlignHCenter
             Layout.fillHeight: true
             Layout.topMargin: Style.spacingLarge
-            spacing: Style.spacingSmall
+            spacing: Style.spacingMedium
 
-            // 连接状态指示器
-            Rectangle {
-                Layout.preferredWidth: root.buttonWidth - Style.spacingSmall * 2
-                Layout.preferredHeight: 20
-                color: {
-                    if (!root.printer) return Style.bgTertiary
-                    if (root.printer.isConnected) return Style.success
-                    return Style.warning
-                }
-                radius: Style.radiusTiny
-                border.width: Style.borderThin
-                border.color: Style.border
+            // 连接状态指示器（无背景，直接显示图标）
+            Item {
+                Layout.preferredWidth: 40
+                Layout.preferredHeight: 32
+                Layout.alignment: Qt.AlignHCenter
 
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.margins: 2
-                    spacing: 4
+                // 连接状态图标（绿色WiFi图标=连接，红色断开图标=断开）
+                Rectangle {
+                    width: 12
+                    height: 12
+                    radius: 6
+                    color: {
+                        if (!root.printer) return Style.bgCard
+                        if (root.printer.isConnected) return Style.success
+                        return Style.error
+                    }
+                    anchors.centerIn: parent
 
-                    // 连接状态指示点（绿点=连接，红点=断开）
+                    // 断开连接时闪烁
+                    SequentialAnimation on opacity {
+                        running: root.printer && !root.printer.isConnected
+                        loops: Animation.Infinite
+                        NumberAnimation { from: 1.0; to: 0.3; duration: 800 }
+                        NumberAnimation { from: 0.3; to: 1.0; duration: 800 }
+                    }
+
+                    // 连接时显示WiFi信号符号（3条信号线）
                     Rectangle {
-                        width: 8
-                        height: 8
-                        radius: 4
-                        color: {
-                            if (!root.printer) return Style.bgCard
-                            if (root.printer.isConnected) return Style.success
-                            return Style.error
-                        }
-                        Layout.alignment: Qt.AlignVCenter
-
-                        // 断开连接时闪烁
-                        SequentialAnimation on opacity {
-                            running: root.printer && !root.printer.isConnected
-                            loops: Animation.Infinite
-                            NumberAnimation { from: 1.0; to: 0.3; duration: 800 }
-                            NumberAnimation { from: 0.3; to: 1.0; duration: 800 }
-                        }
-                    }
-
-                    Text {
-                        text: {
-                            if (!root.printer) return "MOONRAKER"
-                            if (root.printer.isConnected) return "ONLINE"
-                            return "OFFLINE"
-                        }
-                        font.pixelSize: 8
-                        font.family: Style.fontFamilyMono
-                        font.bold: true
+                        id: signal1
+                        width: 2
+                        height: 4
                         color: "white"
-                        Layout.fillWidth: true
-                        horizontalAlignment: Text.AlignHCenter
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.bottom: parent.top
+                        anchors.bottomMargin: 6
+                        visible: root.printer && root.printer.isConnected
+                    }
+
+                    Rectangle {
+                        id: signal2
+                        width: 2
+                        height: 6
+                        color: "white"
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.bottom: parent.top
+                        anchors.bottomMargin: 3
+                        visible: root.printer && root.printer.isConnected
+                    }
+
+                    Rectangle {
+                        id: signal3
+                        width: 2
+                        height: 8
+                        color: "white"
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.bottom: parent.top
+                        anchors.bottomMargin: 0
+                        visible: root.printer && root.printer.isConnected
                     }
                 }
             }
 
-            // 喷嘴温度
-            Rectangle {
-                Layout.preferredWidth: root.buttonWidth - Style.spacingSmall * 2
-                Layout.preferredHeight: 24
-                color: Style.bgTertiary
-                radius: Style.radiusTiny
-                border.width: Style.borderThin
-                border.color: Style.border
+            // 喷嘴温度（直接显示数字，无背景）
+            ColumnLayout {
+                Layout.alignment: Qt.AlignHCenter
+                spacing: 2
 
-                ColumnLayout {
-                    anchors.fill: parent
-                    anchors.margins: 2
-                    spacing: 1
+                ThemedIcon {
+                    iconName: "heat-up"
+                    iconSize: 16
+                    Layout.alignment: Qt.AlignHCenter
+                }
 
-                    ThemedIcon {
-                        iconName: "heat-up"
-                        iconSize: 10
-                        Layout.alignment: Qt.AlignHCenter
-                        opacity: 0.8
-                    }
-
-                    Text {
-                        text: {
-                            if (!root.printer) return "?"
-                            return Math.round(root.printer.extruderTemp || 0) + "°"
+                Text {
+                    text: {
+                        if (!root.printer) return "?"
+                        var temp = Math.round(root.printer.extruderTemp || 0)
+                        var target = Math.round(root.printer.extruderTarget || 0)
+                        if (target > 0) {
+                            return temp + "→" + target
                         }
-                        font.pixelSize: 9
-                        font.family: Style.fontFamilyMono
-                        font.bold: true
-                        color: Style.accent
-                        Layout.alignment: Qt.AlignHCenter
+                        return temp + "°"
                     }
-
-                    Text {
-                        text: {
-                            if (!root.printer) return ""
-                            var target = Math.round(root.printer.extruderTarget || 0)
-                            return target > 0 ? "→" + target : ""
-                        }
-                        font.pixelSize: 7
-                        font.family: Style.fontFamilyMono
-                        color: Style.textSecondary
-                        Layout.alignment: Qt.AlignHCenter
-                        visible: text !== ""
-                    }
+                    font.pixelSize: 12
+                    font.family: Style.fontFamilyMono
+                    font.bold: true
+                    color: Style.accent
+                    Layout.alignment: Qt.AlignHCenter
                 }
             }
 
-            // 热床温度
-            Rectangle {
-                Layout.preferredWidth: root.buttonWidth - Style.spacingSmall * 2
-                Layout.preferredHeight: 24
-                color: Style.bgTertiary
-                radius: Style.radiusTiny
-                border.width: Style.borderThin
-                border.color: Style.border
+            // 热床温度（直接显示数字，无背景）
+            ColumnLayout {
+                Layout.alignment: Qt.AlignHCenter
+                spacing: 2
 
-                ColumnLayout {
-                    anchors.fill: parent
-                    anchors.margins: 2
-                    spacing: 1
+                ThemedIcon {
+                    iconName: "bed"
+                    iconSize: 16
+                    Layout.alignment: Qt.AlignHCenter
+                }
 
-                    ThemedIcon {
-                        iconName: "bed"
-                        iconSize: 10
-                        Layout.alignment: Qt.AlignHCenter
-                        opacity: 0.8
-                    }
-
-                    Text {
-                        text: {
-                            if (!root.printer) return "?"
-                            return Math.round(root.printer.bedTemp || 0) + "°"
+                Text {
+                    text: {
+                        if (!root.printer) return "?"
+                        var temp = Math.round(root.printer.bedTemp || 0)
+                        var target = Math.round(root.printer.bedTarget || 0)
+                        if (target > 0) {
+                            return temp + "→" + target
                         }
-                        font.pixelSize: 9
-                        font.family: Style.fontFamilyMono
-                        font.bold: true
-                        color: Style.info
-                        Layout.alignment: Qt.AlignHCenter
+                        return temp + "°"
                     }
-
-                    Text {
-                        text: {
-                            if (!root.printer) return ""
-                            var target = Math.round(root.printer.bedTarget || 0)
-                            return target > 0 ? "→" + target : ""
-                        }
-                        font.pixelSize: 7
-                        font.family: Style.fontFamilyMono
-                        color: Style.textSecondary
-                        Layout.alignment: Qt.AlignHCenter
-                        visible: text !== ""
-                    }
+                    font.pixelSize: 12
+                    font.family: Style.fontFamilyMono
+                    font.bold: true
+                    color: Style.info
+                    Layout.alignment: Qt.AlignHCenter
                 }
             }
         }
