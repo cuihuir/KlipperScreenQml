@@ -80,15 +80,8 @@ HomeWidget {
         console.log("PrintControlWidget: printState changed to:", printState)
     }
 
-    // Complete 状态自动切换定时器
-    Timer {
-        id: completeTimer
-        interval: 3000
-        running: root.printState === "complete"
-        onTriggered: {
-            root.printState = "standby"
-        }
-    }
+    // 已移除 Complete 状态自动切换定时器
+    // 用户需要手动点击完成状态来清除
 
     // ===== 内容区域 =====
     ColumnLayout {
@@ -401,7 +394,7 @@ HomeWidget {
                 }
             }
 
-            // Complete 状态：完成提示
+            // Complete 状态：完成提示（可点击清除）
             ColumnLayout {
                 visible: root.printState === "complete"
                 anchors.centerIn: parent
@@ -424,6 +417,96 @@ HomeWidget {
                     elide: Text.ElideMiddle
                     Layout.maximumWidth: root.width - Style.spacingLarge * 2
                     Layout.alignment: Qt.AlignHCenter
+                }
+
+                Text {
+                    text: "点击清除状态"
+                    font.pixelSize: Style.fontSmall
+                    color: Style.textDisabled
+                    opacity: 0.6
+                    Layout.alignment: Qt.AlignHCenter
+                }
+            }
+
+            // 添加点击区域清除完成状态
+            MouseArea {
+                visible: root.printState === "complete"
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                hoverEnabled: true
+
+                onClicked: {
+                    console.log("Clearing complete status, sending SDCARD_RESET_FILE")
+                    // 发送清除状态命令
+                    if (app && app.printer) {
+                        app.printer.sendGcode("SDCARD_RESET_FILE")
+                    }
+                }
+
+                onEntered: {
+                    parent.opacity = 0.8
+                }
+
+                onExited: {
+                    parent.opacity = 1.0
+                }
+            }
+
+          // Cancelled 状态：取消提示（可点击清除）
+            ColumnLayout {
+                visible: root.printState === "cancelled"
+                anchors.centerIn: parent
+                spacing: Style.spacingSmall
+
+                Text {
+                    text: "✕ 打印取消"
+                    font.pixelSize: Style.fontXLarge
+                    font.family: Style.fontFamily
+                    font.bold: true
+                    color: Style.warning
+                    Layout.alignment: Qt.AlignHCenter
+                }
+
+                Text {
+                    text: root.currentFileName
+                    font.pixelSize: Style.fontNormal
+                    font.family: Style.fontFamily
+                    color: Style.textSecondary
+                    elide: Text.ElideMiddle
+                    Layout.maximumWidth: root.width - Style.spacingLarge * 2
+                    Layout.alignment: Qt.AlignHCenter
+                }
+
+                Text {
+                    text: "点击清除状态"
+                    font.pixelSize: Style.fontSmall
+                    color: Style.textDisabled
+                    opacity: 0.6
+                    Layout.alignment: Qt.AlignHCenter
+                }
+            }
+
+            // 点击区域清除取消状态
+            MouseArea {
+                visible: root.printState === "cancelled"
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                hoverEnabled: true
+
+                onClicked: {
+                    console.log("Clearing cancelled status, sending SDCARD_RESET_FILE")
+                    // 发送清除状态命令
+                    if (app && app.printer) {
+                        app.printer.sendGcode("SDCARD_RESET_FILE")
+                    }
+                }
+
+                onEntered: {
+                    parent.opacity = 0.8
+                }
+
+                onExited: {
+                    parent.opacity = 1.0
                 }
             }
 

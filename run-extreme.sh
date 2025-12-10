@@ -8,8 +8,8 @@
 # Qt 性能优化环境变量
 export QT_QPA_PLATFORM=xcb
 
-# 禁用所有调试输出
-export QT_LOGGING_RULES="*=false"
+# 禁用大部分调试输出，但保留关键错误信息
+export QT_LOGGING_RULES="*=false;qt.qml.binding=false;qt.qml.connections=false;qt.qml.importloader=false"
 export QT_DEBUG_PLUGINS=0
 
 # 图形渲染优化
@@ -47,11 +47,13 @@ echo ""
 if [ -d "$SCRIPT_DIR/venv" ]; then
     echo "使用虚拟环境启动..."
     source "$SCRIPT_DIR/venv/bin/activate"
-    python -OO "$SCRIPT_DIR/main.py" 2>&1 | grep -v "QML\|Binding\|Warning" || true
+    # 暂时不用 -OO 优化和输出过滤，便于调试
+    python "$SCRIPT_DIR/main.py"
 elif [ -d "$SCRIPT_DIR/.venv" ]; then
     echo "使用 .venv 虚拟环境启动..."
     source "$SCRIPT_DIR/.venv/bin/activate"
-    python -OO "$SCRIPT_DIR/main.py" 2>&1 | grep -v "QML\|Binding\|Warning" || true
+    # 暂时不用 -OO 优化和输出过滤，便于调试
+    python "$SCRIPT_DIR/main.py"
 else
     echo "错误: 未找到虚拟环境 (venv 或 .venv)"
     echo "请先创建虚拟环境:"
