@@ -53,17 +53,13 @@ Page {
                 id: frontSide
                 anchors.fill: parent
                 spacing: Style.spacingLarge
-                visible: !showKeypad
+                visible: opacity > 0
+                opacity: showKeypad ? 0.0 : 1.0
 
-                transform: Rotation {
-                    id: frontRotation
-                    origin.x: frontSide.width / 2
-                    origin.y: frontSide.height / 2
-                    axis { x: 0; y: 1; z: 0 }
-                    angle: 0
-
-                    Behavior on angle {
-                        NumberAnimation { duration: 400; easing.type: Easing.InOutQuad }
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: Style.durationFast
+                        easing.type: Easing.InOutQuad
                     }
                 }
 
@@ -905,19 +901,15 @@ Page {
         Components.NumericKeypad {
             id: backSide
             anchors.fill: parent
-            visible: showKeypad
+            visible: opacity > 0
+            opacity: showKeypad ? 1.0 : 0.0
             title: keypadTitle
             maxLength: 3
 
-            transform: Rotation {
-                id: backRotation
-                origin.x: backSide.width / 2
-                origin.y: backSide.height / 2
-                axis { x: 0; y: 1; z: 0 }
-                angle: -180
-
-                Behavior on angle {
-                    NumberAnimation { duration: 400; easing.type: Easing.InOutQuad }
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: Style.durationFast
+                    easing.type: Easing.InOutQuad
                 }
             }
 
@@ -934,22 +926,6 @@ Page {
                 backSide.clear()
             }
         }
-
-        // 翻转动画状态
-        states: [
-            State {
-                name: "showKeypad"
-                when: showKeypad
-                PropertyChanges { target: frontRotation; angle: 90 }
-                PropertyChanges { target: backRotation; angle: 0 }
-            },
-            State {
-                name: "showContent"
-                when: !showKeypad
-                PropertyChanges { target: frontRotation; angle: 0 }
-                PropertyChanges { target: backRotation; angle: -180 }
-            }
-        ]
     }
     }
 

@@ -676,14 +676,7 @@ Page {
                 from: 0.0
                 to: 1.0
                 duration: Style.durationFast
-                easing.type: Easing.OutCubic
-            }
-            NumberAnimation {
-                property: "scale"
-                from: 0.9
-                to: 1.0
-                duration: Style.durationFast
-                easing.type: Easing.OutBack
+                easing.type: Easing.OutQuad
             }
         }
 
@@ -693,7 +686,7 @@ Page {
                 from: 1.0
                 to: 0.0
                 duration: Style.durationFast
-                easing.type: Easing.InCubic
+                easing.type: Easing.InQuad
             }
         }
 
