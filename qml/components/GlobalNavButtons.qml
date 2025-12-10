@@ -217,65 +217,18 @@ Rectangle {
             Layout.topMargin: Style.spacingLarge
             spacing: Style.spacingMedium
 
-            // 连接状态指示器（无背景，直接显示图标）
-            Item {
-                Layout.preferredWidth: 80
-                Layout.preferredHeight: 64
+            // GUI连接状态指示器（与Moonraker的连接）
+            ThemedIcon {
+                iconName: root.printer && root.printer.isConnected ? "link" : "unlink"
+                iconSize: 32
                 Layout.alignment: Qt.AlignHCenter
 
-                // 连接状态图标（绿色WiFi图标=连接，红色断开图标=断开）
-                Rectangle {
-                    width: 24
-                    height: 24
-                    radius: 12
-                    color: {
-                        if (!root.printer) return Style.bgCard
-                        if (root.printer.isConnected) return Style.success
-                        return Style.error
-                    }
-                    anchors.centerIn: parent
-
-                    // 断开连接时闪烁
-                    SequentialAnimation on opacity {
-                        running: root.printer && !root.printer.isConnected
-                        loops: Animation.Infinite
-                        NumberAnimation { from: 1.0; to: 0.3; duration: 800 }
-                        NumberAnimation { from: 0.3; to: 1.0; duration: 800 }
-                    }
-
-                    // 连接时显示WiFi信号符号（3条信号线）
-                    Rectangle {
-                        id: signal1
-                        width: 4
-                        height: 8
-                        color: "white"
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        anchors.bottom: parent.top
-                        anchors.bottomMargin: 12
-                        visible: root.printer && root.printer.isConnected
-                    }
-
-                    Rectangle {
-                        id: signal2
-                        width: 4
-                        height: 12
-                        color: "white"
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        anchors.bottom: parent.top
-                        anchors.bottomMargin: 6
-                        visible: root.printer && root.printer.isConnected
-                    }
-
-                    Rectangle {
-                        id: signal3
-                        width: 4
-                        height: 16
-                        color: "white"
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        anchors.bottom: parent.top
-                        anchors.bottomMargin: 0
-                        visible: root.printer && root.printer.isConnected
-                    }
+                // 断开连接时闪烁
+                SequentialAnimation on opacity {
+                    running: root.printer && !root.printer.isConnected
+                    loops: Animation.Infinite
+                    NumberAnimation { from: 1.0; to: 0.3; duration: 800 }
+                    NumberAnimation { from: 0.3; to: 1.0; duration: 800 }
                 }
             }
 
